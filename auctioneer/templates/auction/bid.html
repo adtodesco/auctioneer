@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Bid "{{ player['name'] }}"{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="value">Enter bid below. Your bid will become the players total salary
+      if you win this player's auction.</label>
+    <input name="value" id="value"
+      value="{{ request.form['value'] or bid['value'] }}" required>
+    <input type="submit" value="Save">
+  </form>
+  <hr>
+{% endblock %}

@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  auctioneer:
+    build:
+      context: .
+    ports:
+      - 5000:5000
+    volumes:
+      - sqlite-instance:/auctioneer/instance
+
+volumes:
+  sqlite-instance:

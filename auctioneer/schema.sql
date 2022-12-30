@@ -1,0 +1,36 @@
+DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS player;
+DROP TABLE IF EXISTS bid;
+
+
+CREATE TABLE user (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  is_league_manager BOOLEAN NOT NULL
+);
+
+CREATE TABLE player (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  position TEXT NOT NULL,
+  team TEXT NOT NULL,
+  nominator_id INTEGER NOT NULL,
+  matcher_id INTEGER,
+  winner_id INTEGER,
+  ends_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (nominator_id) REFERENCES user (id),
+  FOREIGN KEY (matcher_id) REFERENCES user (id),
+  FOREIGN KEY (winner_id) REFERENCES user (id)
+);
+
+CREATE TABLE bid (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  player_id INTEGER NOT NULL,
+  value INTEGER,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES user (id),
+  FOREIGN KEY (player_id) REFERENCES player (id)
+);
