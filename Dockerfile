@@ -8,4 +8,4 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN python -m flask --app auctioneer init-db
 
-CMD ["python", "-m", "flask", "--app", "auctioneer", "run", "--host=0.0.0.0"]
+CMD ["python", "-m", "gunicorn", "-b 0.0.0.0", "auctioneer:create_app()"]

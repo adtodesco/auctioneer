@@ -69,7 +69,6 @@ def index():
     match_players = list()
     closed_players = list()
     for player in players:
-        print(f"player: {dict(player)}")
         if player["winner_id"]:
             closed_players.append(player)
         elif player["ends_at"] and player["ends_at"] < datetime.utcnow() and player["matcher_id"]:
