@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Bid "{{ player['name'] }}"{% endblock %}</h1>
+  <h1>{% block title %}Bid "{{ nomination['name'] }}"{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
@@ -13,4 +13,8 @@
     <input type="submit" value="Save">
   </form>
   <hr>
+  <form method="post">
+    <input type="hidden" name="value" value="" />
+    <input class="danger" type="submit" value="Reset">
+  </form>
 {% endblock %}

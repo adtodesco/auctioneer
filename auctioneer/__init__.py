@@ -1,6 +1,9 @@
 import os
 
 from flask import Flask
+from flask_moment import Moment
+
+moment = Moment()
 
 
 def create_app(test_config=None):
@@ -24,13 +27,18 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    moment.init_app(app)
+
     from . import db
+
     db.init_app(app)
 
     from . import auth
+
     app.register_blueprint(auth.bp)
 
     from . import auction
+
     app.register_blueprint(auction.bp)
     app.add_url_rule("/", endpoint="index")
 

@@ -1,4 +1,6 @@
 <!doctype html>
+<html style="background-image: url({{ url_for('static', filename='thedoologo.png') }});background-size: 20%;">
+<head>{{ moment.include_moment() }}</head>
 <title>Auctioneer - {% block title %}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <nav>
@@ -22,3 +24,4 @@
   {% endfor %}
   {% block content %}{% endblock %}
 </section>
+</html>

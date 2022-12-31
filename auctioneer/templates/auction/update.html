@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Edit "{{ player['name'] }}"{% endblock %}</h1>
+  <h1>{% block title %}Edit "{{ nomination['name'] }}"{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
   <form method="post">
     <label for="name">Name</label>
     <input name="name" id="name"
-      value="{{ request.form['name'] or player['name'] }}" required>
+      value="{{ request.form['name'] or nomination['name'] }}" required>
     <label for="position">Position</label>
     <select name="position" id="position" required>
       {% for pos in positions %}
-        {% if pos == player['position'] %}
+        {% if pos == nomination['position'] %}
         <option value="{{ pos }}" selected>{{ pos }}</option>
         {% else %}
         <option value="{{ pos }}">{{ pos }}</option>
@@ -22,25 +22,32 @@
     <label for="team">Team</label>
     <select name="team" id="team" required>
       {% for team in teams %}
-        {% if team == player['team'] %}
+        {% if team == nomination['team'] %}
         <option value="{{ team }}" selected>{{ team }}</option>
         {% else %}
         <option value="{{ team }}">{{ team }}</option>
         {% endif %}
       {% endfor %}
     </select>
-    <label for="ends_at">Ends at</label>
-    <input name="ends_at" id="ends_at" type="datetime-local"
-      value="{{ request.form['ends_at'] or player['ends_at'] }}">
+    <label for="slot_id">Auction ends (UTC)</label>
+    <select name="slot_id" id="slot_id">
+      {% for slot in slots %}
+        {% if slot['id'] == nomination['slot_id'] %}
+          <option value="{{ slot['id'] }}" selected>{{ slot['ends_at'] }}</option>
+          {% else %}
+          <option value="{{ slot['id'] }}">{{ slot['ends_at'] }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
     <label for="matcher_id">Match rights</label>
     <select name="matcher_id" id="matcher_id">
-      {% if not player['matcher_id'] %}
+      {% if not nomination['matcher_id'] %}
       <option value="">No matcher</option>
       {% else %}
       <option value="" selected>No matcher</option>
       {% endif %}
       {% for user in users %}
-        {% if user['id'] == player['matcher_id'] %}
+        {% if user['id'] == nomination['matcher_id'] %}
         <option value="{{ user['id'] }}" selected>{{ user['username'] }}</option>
         {% else %}
         <option value="{{ user['id'] }}">{{ user['username'] }}</option>
@@ -49,13 +56,13 @@
     </select>
     <label for="winner_id">Winner</label>
     <select name="winner_id" id="winner_id">
-      {% if not player['winner_id'] %}
+      {% if not nomination['winner_id'] %}
       <option value="">No winner</option>
       {% else %}
       <option value="" selected>No winner</option>
       {% endif %}
       {% for user in users %}
-        {% if user['id'] == player['winner_id'] %}
+        {% if user['id'] == nomination['winner_id'] %}
         <option value="{{ user['id'] }}" selected>{{ user['username'] }}</option>
         {% else %}
         <option value="{{ user['id'] }}">{{ user['username'] }}</option>
@@ -65,7 +72,7 @@
     <input type="submit" value="Save">
   </form>
   <hr>
-  <form action="{{ url_for('auction.delete', id=player['id']) }}" method="post">
+  <form action="{{ url_for('auction.delete', id=nomination['id']) }}" method="post">
     <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
   </form>
 {% endblock %}

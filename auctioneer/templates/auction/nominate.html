@@ -23,6 +23,13 @@
       <option value="{{ team }}">{{ team }}</option>
       {% endfor %}
     </select>
+    <label for="slot_id">Auction ends (UTC)</label>
+    <select name="slot_id" id="slot_id" required>
+      <option disabled selected value="">-- Select an end time --</option>
+      {% for slot in slots %}
+      <option value="{{ slot['id'] }}">{{ slot['ends_at'] }}</option>
+      {% endfor %}
+    </select>
     <label for="matcher_id">Matcher</label>
     <select name="matcher_id" id="matcher_id">
       <option selected value="">No matcher</option>

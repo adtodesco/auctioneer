@@ -40,11 +40,12 @@ def register():
                     (username, generate_password_hash(password), is_league_manager),
                 )
                 user_id = cur.lastrowid
-                players = db.execute("SELECT id from player")
-                for player in players:
+                nominations = db.execute("SELECT id from nomination")
+                for nomination in nominations:
                     db.execute(
-                        "INSERT INTO bid (user_id, player_id, value) Values (?, ?, ?)",
-                        (user_id, player["id"], None),
+                        "INSERT INTO bid (user_id, nomination_id, value) "
+                        "Values (?, ?, ?)",
+                        (user_id, nomination["id"], None),
                     )
                 db.commit()
             except db.IntegrityError:

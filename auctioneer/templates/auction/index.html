@@ -1,84 +1,80 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Players{% endblock %}</h1>
+  <h1>{% block title %}Nominations{% endblock %}</h1>
   {% if g.user %}
     <a class="action" href="{{ url_for('auction.nominate') }}">Nominate</a>
   {% endif %}
 {% endblock %}
 
 {% block content %}
-  {% for player in open_players %}
-    <div class="player opened">
+  {% for nomination in open_nominations %}
+    <hr>
+    <div class="nomination opened">
       <div class="modifiable">
         <div>
-          <h2>{{ player['name'] }} | {{ player['position'] }} | {{ player['team'] }}</h2>
-          <p class="about">Nominated on {{ player['created_at'].strftime('%B %-m, %Y at %I:%m:%S%p') }} by {{ player['nominator_username'] }}</p>
+          <h2>{{ nomination['name'] }} | {{ nomination['position'] }} | {{ nomination['team'] }}</h2>
+          <p class="about">Nominated {{ moment(nomination['created_at']).format('LLL') }} by {{ nomination['nominator_username'] }}</p>
         </div>
         {% if g.user['is_league_manager'] == True %}
-          <a class="action" href="{{ url_for('auction.update', id=player['id']) }}">Edit</a>
+          <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
         {% endif %}
       </div>
       <div>
-        {% if player['ends_at'] %}
-        <p class="status">Auction ends at: {{ player['ends_at'].strftime('%I:%m:%S%p on %B %-m, %Y') }}.</p>
-        {% else %}
-        <p class="status">Auction end time has not been set.</p>
-        {% endif %}
-        {% if player['matcher_id'] %}
-        <p class="match">Match rights: {{ player['matcher_username'] }}</p>
+        <p class="status">Auction ends: {{ moment(nomination['ends_at']).format('LLL') }}</p>
+        {% if nomination['matcher_id'] %}
+        <p class="match">Match rights: {{ nomination['matcher_username'] }}</p>
         {% endif %}
       </div>
       {% if g.user %}
       <div class="modifiable">
         <div>
-          <p class="bid">{{ g.user['username'] }}'s current bid: {{ player['user_value'] }}</p>
+          <p class="bid">{{ g.user['username'] }}'s current bid: {{ nomination['user_value'] }}</p>
         </div>
-        <a class="action" href="{{ url_for('auction.bid', id=player['id']) }}">Bid</a>
+        <a class="action" href="{{ url_for('auction.bid', id=nomination['id']) }}">Bid</a>
       </div>
       {% endif %}
     </div>
-    <hr>
   {% endfor %}
 
-  {% for player in match_players %}
-    <div class="player matching">
+  {% for nomination in match_nominations %}
+    <hr>
+    <div class="nomination matching">
       <div class="modifiable">
         <div>
-          <h2>{{ player['name'] }} | {{ player['position'] }} | {{ player['team'] }}</h2>
-          <p class="about">Nominated on {{ player['created_at'].strftime('%B %-m, %Y at %I:%m:%S%p') }} by {{ player['nominator_username'] }}</p>
+          <h2>{{ nomination['name'] }} | {{ nomination['position'] }} | {{ nomination['team'] }}</h2>
+          <p class="about">Nominated {{ moment(nomination['created_at']).format('LLL') }} by {{ nomination['nominator_username'] }}</p>
         </div>
         {% if g.user['is_league_manager'] == True %}
-          <a class="action" href="{{ url_for('auction.update', id=player['id']) }}">Edit</a>
+          <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
         {% endif %}
       </div>
-      {% if g.user['id'] == player['match_id'] %}
+      {% if g.user['id'] == nomination['match_id'] %}
       <div class="modifiable">
         <div>
-          <p class="bid">Winning bid for {{ player['name'] }}: {{ player['value'] }}</p>
+          <p class="bid">Winning bid for {{ nomination['name'] }}: {{ nomination['value'] }}</p>
         </div>
-        <a class="action" href="{{ url_for('auction.match', id=player['id']) }}">Match</a>
+        <a class="action" href="{{ url_for('auction.match', id=nomination['id']) }}">Match</a>
       </div >
       {% endif %}
     </div>
-    <hr>
   {% endfor %}
 
-  {% for player in closed_players %}
-    <div class="player closed">
+  {% for nomination in closed_nominations %}
+    <hr>
+    <div class="nomination closed">
       <div class="modifiable">
         <div>
-          <h2>{{ player['name'] }} | {{ player['position'] }} | {{ player['team'] }}</h2>
-          <p class="about">Nominated on {{ player['created_at'].strftime('%B %-m, %Y at %I:%m:%S%p') }} by {{ player['nominator_username'] }}</p>
+          <h2>{{ nomination['name'] }} | {{ nomination['position'] }} | {{ nomination['team'] }}</h2>
+          <p class="about">Nominated {{ moment(nomination['created_at']).format('LLL') }} by {{ nomination['nominator_username'] }}</p>
         </div>
         {% if g.user['is_league_manager'] == True %}
-          <a class="action" href="{{ url_for('auction.update', id=player['id']) }}">Edit</a>
+          <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
         {% endif %}
       </div>
       <div>
-        <p class="status">Auction is closed! {{ player["winner_username"] }} won the auction with a bid of ${{ player["winner_value"] }}.</p>
+        <p class="status">Auction is closed! {{ nomination["winner_username"] }} won the auction with a bid of ${{ nomination["winner_value"] }}.</p>
       </div>
     </div>
-    <hr>
   {% endfor %}
 {% endblock %}

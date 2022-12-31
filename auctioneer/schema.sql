@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS user;
-DROP TABLE IF EXISTS player;
+DROP TABLE IF EXISTS slot;
+DROP TABLE IF EXISTS nomination;
 DROP TABLE IF EXISTS bid;
 
 
@@ -10,16 +11,23 @@ CREATE TABLE user (
   is_league_manager BOOLEAN NOT NULL
 );
 
-CREATE TABLE player (
+
+CREATE TABLE slot (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ends_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE nomination (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   position TEXT NOT NULL,
   team TEXT NOT NULL,
+  slot_id INTEGER NOT NULL,
   nominator_id INTEGER NOT NULL,
   matcher_id INTEGER,
   winner_id INTEGER,
-  ends_at TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (slot_id) REFERENCES slot (id),
   FOREIGN KEY (nominator_id) REFERENCES user (id),
   FOREIGN KEY (matcher_id) REFERENCES user (id),
   FOREIGN KEY (winner_id) REFERENCES user (id)
@@ -28,9 +36,9 @@ CREATE TABLE player (
 CREATE TABLE bid (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
-  player_id INTEGER NOT NULL,
+  nomination_id INTEGER NOT NULL,
   value INTEGER,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES user (id),
-  FOREIGN KEY (player_id) REFERENCES player (id)
+  FOREIGN KEY (nomination_id) REFERENCES nomination (id)
 );
