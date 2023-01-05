@@ -234,9 +234,9 @@ def update(id):
 @login_required
 def bid(id):
     nomination = get_nomination(id)
-    bid = dict(get_bid(g.user["id"], nomination["id"]))
-    if not bid["value"]:
-        bid["value"] = ""
+    user_bid = dict(get_bid(g.user["id"], nomination["id"]))
+    if not user_bid["value"]:
+        user_bid["value"] = ""
 
     if request.method == "POST":
         value = request.form["value"] or None
@@ -260,12 +260,12 @@ def bid(id):
             db = get_db()
             db.execute(
                 "UPDATE bid SET value = ? WHERE id = ?",
-                (value, bid["id"]),
+                (value, user_bid["id"]),
             )
             db.commit()
             return redirect(url_for("auction.index"))
 
-    return render_template("auction/bid.html", nomination=nomination, bid=bid)
+    return render_template("auction/bid.html", nomination=nomination, bid=user_bid)
 
 
 @bp.route("/<int:id>/match", methods=("GET", "POST"))
@@ -278,9 +278,22 @@ def match(id):
 
         db = get_db()
         if is_match:
-            print("Match!")
+            user_bid = get_bid(g.user["id"], nomination["id"])
+            db.execute(
+                "UPDATE bid SET value = ? WHERE id = ?",
+                (nomination["winner_value"], user_bid["id"]),
+            )
+            db.execute(
+                "UPDATE nomination SET matcher_id = ?, winner_id = ? " "WHERE id = ?",
+                (None, nomination["matcher_id"], id),
+            )
         else:
-            print("No match!")
+            # TODO: insert tiebreaking logic here if applicable
+            db.execute(
+                "UPDATE nomination SET matcher_id = ? " "WHERE id = ?",
+                (None, id),
+            )
+        db.commit()
         return redirect(url_for("auction.index"))
 
     return render_template("auction/match.html", nomination=nomination, bid=bid)
