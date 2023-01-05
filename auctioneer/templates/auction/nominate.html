@@ -26,8 +26,12 @@
     <label for="slot_id">Auction ends (UTC)</label>
     <select name="slot_id" id="slot_id" required>
       <option disabled selected value="">-- Select an end time --</option>
-      {% for slot in slots %}
-      <option value="{{ slot['id'] }}">{{ slot['ends_at'] }}</option>
+      {% for num, slots in blocks.items() %}
+      <optgroup label="Block {{ num }}">
+        {% for slot in slots %}
+        <option value="{{ slot['id'] }}">{{ slot['ends_at'] }}</option>
+        {% endfor %}
+      </optgroup>
       {% endfor %}
     </select>
     <label for="matcher_id">Matcher</label>

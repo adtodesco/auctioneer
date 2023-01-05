@@ -14,6 +14,7 @@ CREATE TABLE user (
 
 CREATE TABLE slot (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  block INTEGER NOT NULL,
   ends_at TIMESTAMP NOT NULL
 );
 
@@ -22,7 +23,7 @@ CREATE TABLE nomination (
   name TEXT NOT NULL,
   position TEXT NOT NULL,
   team TEXT NOT NULL,
-  slot_id INTEGER NOT NULL,
+  slot_id INTEGER UNIQUE NOT NULL,
   nominator_id INTEGER NOT NULL,
   matcher_id INTEGER,
   winner_id INTEGER,

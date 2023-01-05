@@ -27,10 +27,10 @@ def init_db():
     with current_app.open_resource("schema.sql") as f:
         db.executescript(f.read().decode("utf8"))
 
-    with current_app.open_resource("slots.txt") as f:
-        slots = list((s.decode("utf-8").strip("\n"),) for s in f.readlines())
+    with current_app.open_resource("slots.csv") as f:
+        slots = list(s.decode("utf-8").strip("\n").split(",") for s in f.readlines())
 
-    db.executemany("INSERT INTO slot (ends_at) VALUES (?)", slots)
+    db.executemany("INSERT INTO slot (block, ends_at) VALUES (?, ?)", slots)
     db.commit()
 
 

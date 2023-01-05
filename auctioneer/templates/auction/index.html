@@ -20,16 +20,18 @@
           <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
         {% endif %}
       </div>
+
       <div>
-        <p class="status">Auction ends: {{ moment(nomination['ends_at']).format('LLL') }}</p>
+        <p class="status">Auction <strong>OPEN</strong> until: {{ moment(nomination['ends_at']).format('LLL') }} [Block {{ nomination['block'] }}]</p>
         {% if nomination['matcher_id'] %}
-        <p class="match">Match rights: {{ nomination['matcher_username'] }}</p>
+        <p class="match">Match rights: <strong>{{ nomination['matcher_username'] }}</strong></p>
         {% endif %}
       </div>
+
       {% if g.user %}
       <div class="modifiable">
         <div>
-          <p class="bid">{{ g.user['username'] }}'s current bid: {{ nomination['user_value'] }}</p>
+          <p class="bid"><strong>{{ g.user['username'] }}'s</strong> current bid: {% if nomination['user_value'] %}${% endif %}{{ nomination['user_value'] }}</p>
         </div>
         <a class="action" href="{{ url_for('auction.bid', id=nomination['id']) }}">Bid</a>
       </div>
@@ -49,10 +51,18 @@
           <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
         {% endif %}
       </div>
-      {% if g.user['id'] == nomination['match_id'] %}
+
+      <div>
+        <p class="status">Auction <strong>CLOSED</strong> on: {{ moment(nomination['ends_at']).format('LLL') }} [Block {{ nomination['block'] }}]</p>
+        {% if nomination['matcher_id'] %}
+        <p class="match"><strong>{{ nomination['matcher_username'] }}</strong> has 24 hours to match!</p>
+        {% endif %}
+      </div>
+
+      {% if g.user['id'] == nomination['matcher_id'] %}
       <div class="modifiable">
         <div>
-          <p class="bid">Winning bid for {{ nomination['name'] }}: {{ nomination['value'] }}</p>
+          <p class="bid">Match the ${{ nomination['winner_value'] }} bid for {{ nomination['name'] }}?</p>
         </div>
         <a class="action" href="{{ url_for('auction.match', id=nomination['id']) }}">Match</a>
       </div >
@@ -72,8 +82,14 @@
           <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
         {% endif %}
       </div>
+
       <div>
-        <p class="status">Auction is closed! {{ nomination["winner_username"] }} won the auction with a bid of ${{ nomination["winner_value"] }}.</p>
+        <p class="status">Auction <strong>CLOSED</strong> on: {{ moment(nomination['ends_at']).format('LLL') }} [Block {{ nomination['block'] }}]</p>
+      </div>
+      <br>
+
+      <div>
+        <p class="status"><strong>{{ nomination['winner_username'] }}</strong> has won the auction with a bid of ${{ nomination['winner_value'] }}!</p>
       </div>
     </div>
   {% endfor %}
