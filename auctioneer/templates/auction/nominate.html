@@ -41,6 +41,10 @@
       <option value="{{ user['id'] }}">{{ user['username'] }}</option>
       {% endfor %}
     </select>
+    <label for="bid_value">Enter bid below. Your bid will become the players total salary
+      if you win this player's auction.</label>
+    <input name="bid_value" id="bid_value"
+      value="{{ request.form['bid_value'] }}" required>
     <input type="submit" value="Save">
   </form>
 {% endblock %}

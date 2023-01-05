@@ -102,6 +102,7 @@ def nominate():
         team = request.form["team"]
         slot_id = request.form["slot_id"]
         matcher_id = request.form["matcher_id"] or None
+        bid_value = request.form["bid_value"]
 
         error = None
 
@@ -113,6 +114,16 @@ def nominate():
             error = "Team is required."
         elif not slot_id:
             error = "Ends at date time is required."
+        elif not bid_value:
+            error = "Bid value is required."
+
+        if bid_value is not None:
+            try:
+                int(bid_value)
+            except ValueError:
+                error = "Bid value must be an integer."
+            if int(bid_value) < MINIMUM_BID_VALUE:
+                error = f"Minimum bid value is ${MINIMUM_BID_VALUE}."
 
         if error is not None:
             flash(error)
@@ -135,9 +146,10 @@ def nominate():
             nomination_id = cur.lastrowid
             users = db.execute("SELECT id FROM user")
             for user in users:
+                user_bid_value = bid_value if user["id"] == g.user["id"] else None
                 db.execute(
-                    "INSERT INTO bid (user_id, nomination_id, value) Values (?, ?, ?)",
-                    (user["id"], nomination_id, None),
+                    "INSERT INTO bid (user_id, nomination_id, value) VALUES (?, ?, ?)",
+                    (user["id"], nomination_id, user_bid_value),
                 )
             db.commit()
             return redirect(url_for("auction.index"))
@@ -230,6 +242,9 @@ def bid(id):
         value = request.form["value"] or None
 
         error = None
+
+        if value is None and g.user["id"] == nomination["nominator_id"]:
+            error = "The nominator cannot reset their bid."
 
         if value is not None:
             try:
