@@ -44,7 +44,7 @@ def register():
                 for nomination in nominations:
                     db.execute(
                         "INSERT INTO bid (user_id, nomination_id, value) "
-                        "Values (?, ?, ?)",
+                        "VALUES (?, ?, ?)",
                         (user_id, nomination["id"], None),
                     )
                 db.commit()
