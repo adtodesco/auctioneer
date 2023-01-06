@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Tiebreaker Order{% endblock %}</h1>
+{% if g.user['is_league_manager'] %}
+<a class="action" href="{{ url_for('tiebreaker.edit') }}">Edit</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<hr>
+<ol>
+    {% for user in users %}
+    {% if user['tiebreaker_order'] %}
+    <li>{{ user['username'] }}</li>
+    {% endif %}
+    {% endfor %}
+</ol>
+{% endblock %}

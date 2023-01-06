@@ -4,24 +4,32 @@
 <title>Auctioneer - {% block title %}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <nav>
-  <h1>The DOO Auctioneer</h1>
-  <ul>
-    {% if g.user %}
-      <li><span>{{ g.user['username'] }}</span>
-      <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
-    {% else %}
-      <li><a href="{{ url_for('auth.register') }}">Register</a>
-      <li><a href="{{ url_for('auth.login') }}">Log In</a>
-    {% endif %}
-  </ul>
+    <h1>The DOO Auctioneer</h1>
+    <div>
+        <ul>
+            <li><a class="action" href="{{ url_for('auction.index') }}">Nominations</a>
+            </li>
+            <li><a class="action" href="{{ url_for('tiebreaker.index') }}">Tiebreaker
+                Order</a></li>
+        </ul>
+        <ul>
+            {% if g.user %}
+            <li><span>{{ g.user['username'] }}</span>
+            <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
+                {% else %}
+            <li><a href="{{ url_for('auth.register') }}">Register</a>
+            <li><a href="{{ url_for('auth.login') }}">Log In</a>
+                {% endif %}
+        </ul>
+    </div>
 </nav>
 <section class="content">
-  <div class="modifiable">
-    {% block header %}{% endblock %}
-  </div>
-  {% for message in get_flashed_messages() %}
+    <div class="modifiable">
+        {% block header %}{% endblock %}
+    </div>
+    {% for message in get_flashed_messages() %}
     <div class="flash">{{ message }}</div>
-  {% endfor %}
-  {% block content %}{% endblock %}
+    {% endfor %}
+    {% block content %}{% endblock %}
 </section>
 </html>

@@ -42,4 +42,8 @@ def create_app(test_config=None):
     app.register_blueprint(auction.bp)
     app.add_url_rule("/", endpoint="index")
 
+    from . import tiebreaker
+
+    app.register_blueprint(tiebreaker.bp)
+
     return app

@@ -8,7 +8,8 @@ CREATE TABLE user (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  is_league_manager BOOLEAN NOT NULL
+  is_league_manager BOOLEAN NOT NULL,
+  tiebreaker_order INTEGER
 );
 
 
