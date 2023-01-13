@@ -2,8 +2,10 @@ import os
 
 from flask import Flask
 from flask_moment import Moment
+from flask_sqlalchemy import SQLAlchemy
 
 moment = Moment()
+db = SQLAlchemy()
 
 
 def create_app(test_config=None):
@@ -11,7 +13,7 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY="dev",
-        DATABASE=os.path.join(app.instance_path, "auctioneer.sqlite"),
+        SQLALCHEMY_DATABASE_URI="sqlite:///auctioneer.sqlite",
     )
 
     if test_config is None:
@@ -29,9 +31,12 @@ def create_app(test_config=None):
 
     moment.init_app(app)
 
-    from . import db
-
     db.init_app(app)
+
+    from .model import Bid, Nomination, Slot, User
+
+    with app.app_context():
+        db.create_all()
 
     from . import auth
 
@@ -45,5 +50,9 @@ def create_app(test_config=None):
     from . import tiebreaker
 
     app.register_blueprint(tiebreaker.bp)
+
+    from .commands import init_db_command
+
+    app.cli.add_command(init_db_command)
 
     return app

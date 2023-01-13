@@ -7,8 +7,7 @@
 {% block content %}
 <form method="post">
     <label for="name">Name</label>
-    <input name="name" id="name"
-           value="{{ request.form['name'] }}" required>
+    <input name="name" id="name" value="{{ request.form['name'] }}" required>
     <label for="position">Position</label>
     <select name="position" id="position" required>
         <option disabled selected value="">-- Select a position --</option>
@@ -29,7 +28,7 @@
         {% for num, slots in blocks.items() %}
         <optgroup label="Block {{ num }}">
             {% for slot in slots %}
-            <option value="{{ slot['id'] }}">{{ slot['ends_at'] }}</option>
+            <option value="{{ slot.id }}">{{ slot.ends_at }}</option>
             {% endfor %}
         </optgroup>
         {% endfor %}
@@ -38,14 +37,12 @@
     <select name="matcher_id" id="matcher_id">
         <option selected value="">No matcher</option>
         {% for user in users %}
-        <option value="{{ user['id'] }}">{{ user['username'] }}</option>
+        <option value="{{ user.id }}">{{ user.username }}</option>
         {% endfor %}
     </select>
-    <label for="bid_value">Enter bid below. Your bid will become the players total
-        salary
-        if you win this player's auction.</label>
-    <input name="bid_value" id="bid_value"
-           value="{{ request.form['bid_value'] }}" required>
+    <label for="bid_value">Enter bid below. Your bid will become the players total salary if you win this player's auction.</label>
+    <input name="bid_value" id="bid_value" value="{{ request.form['bid_value'] }}"
+           required>
     <input type="submit" value="Save">
 </form>
 {% endblock %}

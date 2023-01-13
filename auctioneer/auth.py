@@ -12,7 +12,8 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .db import get_db
+from . import db
+from .model import Bid, Nomination, User
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -24,7 +25,6 @@ def register():
         password = request.form["password"]
         is_league_manager = True if "is_league_manager" in request.form else False
 
-        db = get_db()
         error = None
 
         if not username:
@@ -34,21 +34,23 @@ def register():
 
         if error is None:
             try:
-                cur = db.execute(
-                    "INSERT INTO user (username, password, is_league_manager) "
-                    "VALUES (?, ?, ?)",
-                    (username, generate_password_hash(password), is_league_manager),
+                user = User(
+                    username=username,
+                    password=generate_password_hash(password),
+                    is_league_manager=is_league_manager,
                 )
-                user_id = cur.lastrowid
-                nominations = db.execute("SELECT id from nomination")
-                for nomination in nominations:
-                    db.execute(
-                        "INSERT INTO bid (user_id, nomination_id, value) "
-                        "VALUES (?, ?, ?)",
-                        (user_id, nomination["id"], None),
+                db.session.add(user)
+                db.session.commit()
+
+                nominations = db.session.execute(db.select(Nomination))
+                for nomination in nominations.scalars():
+                    nomination.bids.append(
+                        Bid(user_id=user.id, nomination_id=nomination.id, value=None)
                     )
-                db.commit()
-            except db.IntegrityError:
+                db.session.add_all(nominations)
+                db.session.commit()
+
+            except db.exc.IntegrityError:
                 error = f"User {username} is already registered."
             else:
                 return redirect(url_for("auth.login"))
@@ -63,20 +65,20 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        db = get_db()
         error = None
-        user = db.execute(
-            "SELECT * FROM user WHERE username = ?", (username,)
-        ).fetchone()
+
+        user = db.session.execute(
+            db.select(User).where(User.username == username)
+        ).scalar()
 
         if user is None:
             error = "Incorrect username."
-        elif not check_password_hash(user["password"], password):
+        elif not check_password_hash(user.password, password):
             error = "Incorrect password."
 
         if error is None:
             session.clear()
-            session["user_id"] = user["id"]
+            session["user_id"] = user.id
             return redirect(url_for("index"))
 
         flash(error)
@@ -91,9 +93,7 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = (
-            get_db().execute("SELECT * FROM user WHERE id = ?", (user_id,)).fetchone()
-        )
+        g.user = db.session.get(User, user_id)
 
 
 @bp.route("/logout")

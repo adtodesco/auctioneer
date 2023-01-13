@@ -1,39 +1,41 @@
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from werkzeug.exceptions import abort
 
+from . import db
 from .auth import login_required
-from .db import get_db
+from .model import User
 
 bp = Blueprint("tiebreaker", __name__, url_prefix="/tiebreaker")
 
 
 @bp.route("/")
 def index():
-    db = get_db()
-    users = db.execute(
-        "SELECT id, username, tiebreaker_order FROM user " "ORDER BY tiebreaker_order "
-    ).fetchall()
-
+    users = (
+        db.session.execute(db.select(User).order_by(User.tiebreaker_order))
+        .scalars()
+        .all()
+    )
     return render_template("tiebreaker/index.html", users=users)
 
 
 @bp.route("/edit", methods=("GET", "POST"))
 @login_required
 def edit():
-    if not g.user["is_league_manager"]:
+    if not g.user.is_league_manager:
         abort(403)
 
-    db = get_db()
-    users = db.execute(
-        "SELECT id, username, tiebreaker_order FROM user " "ORDER BY tiebreaker_order "
-    ).fetchall()
+    users = (
+        db.session.execute(db.select(User).order_by(User.tiebreaker_order))
+        .scalars()
+        .all()
+    )
 
     if request.method == "POST":
         error = None
 
-        updates = list()
+        updates = dict()
         for user in users:
-            name = f"user_{user['id']}_tiebreaker_order"
+            name = f"user_{user.id}_tiebreaker_order"
             if name in request.form:
                 tiebreaker_order = request.form[name]
                 try:
@@ -42,20 +44,25 @@ def edit():
                     error = "Tiebreaker order values must be integers."
                     break
 
-                updates.append((tiebreaker_order, user["id"]))
+                if tiebreaker_order != user.tiebreaker_order:
+                    user.tiebreaker_order = None
+                    updates[user.id] = tiebreaker_order
 
-        if len({t[0] for t in updates}) != len(updates):
-            error = "Duplicate order values are not allowed."
+        if error is None and updates:
+            db.session.add_all(users)
+            db.session.flush()
+            for user_id, tiebreaker_order in updates.items():
+                user = db.session.get(User, user_id)
+                user.tiebreaker_order = tiebreaker_order
+                db.session.add(user)
+            try:
+                db.session.commit()
+            except db.exc.IntegrityError:
+                db.session.rollback()
+                error = "Tiebreaker order values must be unique."
+            else:
+                return redirect(url_for("tiebreaker.index"))
 
-        if error is not None:
-            flash(error)
-        else:
-            if updates:
-                db.executemany(
-                    "UPDATE user SET tiebreaker_order = ? WHERE id = ?",
-                    updates,
-                )
-                db.commit()
-            return redirect(url_for("tiebreaker.index"))
+        flash(error)
 
     return render_template("tiebreaker/edit.html", users=users)

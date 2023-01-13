@@ -13,35 +13,29 @@
 <div class="nomination opened">
     <div class="modifiable">
         <div>
-            <h2>{{ nomination['name'] }} | {{ nomination['position'] }} | {{
-                nomination['team'] }}</h2>
-            <p class="about">Nominated {{ moment(nomination['created_at']).format('LLL')
-                }} by {{ nomination['nominator_username'] }}</p>
+            <h2>{{ nomination.Nomination.name }} | {{ nomination.Nomination.position }} | {{ nomination.Nomination.team }}</h2>
+            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{ nomination.Nomination.nominator_user.username }}</p>
         </div>
-        {% if g.user['is_league_manager'] == True %}
-        <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
+        {% if g.user.is_league_manager == True %}
+        <a class="action"
+           href="{{ url_for('auction.update', id=nomination.Nomination.id) }}">Edit</a>
         {% endif %}
     </div>
 
     <div>
-        <p class="status">Auction <strong>OPEN</strong> until: {{
-            moment(nomination['ends_at']).format('LLL') }} [Block {{ nomination['block']
-            }}]</p>
-        {% if nomination['matcher_id'] %}
-        <p class="match">Match rights: <strong>{{ nomination['matcher_username']
-            }}</strong></p>
+        <p class="status">Auction <strong>OPEN</strong> until: {{ moment(nomination.Nomination.slot.ends_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]</p>
+        {% if nomination.Nomination.matcher_id %}
+        <p class="match">Match rights: <strong>{{ nomination.Nomination.matcher_username }}</strong></p>
         {% endif %}
     </div>
 
     {% if g.user %}
     <div class="modifiable">
         <div>
-            <p class="bid"><strong>{{ g.user['username'] }}'s</strong> current bid: {%
-                if nomination['user_value'] %}${% endif %}{{ nomination['user_value'] }}
-            </p>
+            <p class="bid"><strong>{{ g.user.username }}'s</strong> current bid: {% if nomination.Bid.value %}${% endif %}{{ nomination.Bid.value }}</p>
         </div>
         <a class="action"
-           href="{{ url_for('auction.bid', id=nomination['id']) }}">Bid</a>
+           href="{{ url_for('auction.bid', id=nomination.Nomination.id) }}">Bid</a>
     </div>
     {% endif %}
 </div>
@@ -52,33 +46,29 @@
 <div class="nomination matching">
     <div class="modifiable">
         <div>
-            <h2>{{ nomination['name'] }} | {{ nomination['position'] }} | {{
-                nomination['team'] }}</h2>
-            <p class="about">Nominated {{ moment(nomination['created_at']).format('LLL')
-                }} by {{ nomination['nominator_username'] }}</p>
+            <h2>{{ nomination.Nomination.name }} | {{ nomination.Nomination.position }} | {{ nomination.Nomination.team }}</h2>
+            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{ nomination.Nomination.nominator_user.username }}</p>
         </div>
-        {% if g.user['is_league_manager'] == True %}
-        <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
+        {% if g.user.is_league_manager == True %}
+        <a class="action"
+           href="{{ url_for('auction.update', id=nomination.Nomination.id) }}">Edit</a>
         {% endif %}
     </div>
 
     <div>
-        <p class="status">Auction <strong>CLOSED</strong> on: {{
-            moment(nomination['ends_at']).format('LLL') }} [Block {{ nomination['block']
-            }}]</p>
-        {% if nomination['matcher_id'] %}
-        <p class="match"><strong>{{ nomination['matcher_username'] }}</strong> has 24
-            hours to match!</p>
+        <p class="status">Auction <strong>CLOSED</strong> on: {{ moment(nomination.Nomination.slot.ends_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]</p>
+        {% if nomination.Nomination.matcher_id %}
+        <p class="match"><strong>{{ nomination.Nomination.matcher_user.username }}</strong> has 24 hours to match!</p>
         {% endif %}
     </div>
 
-    {% if g.user['id'] == nomination['matcher_id'] %}
+    {% if g.user.id == nomination.Nomination.matcher_id %}
     <div class="modifiable">
         <div>
-            <p class="bid">Match the ${{ nomination['winner_value'] }} bid for {{
-                nomination['name'] }}?</p>
+            <p class="bid">Match the ${{ nomination.Nomination.bids[0].value }} bid for {{nomination.Nomination.name }}?</p>
         </div>
-        <a class="action" href="{{ url_for('auction.match', id=nomination['id']) }}">Match</a>
+        <a class="action"
+           href="{{ url_for('auction.match', id=nomination.Nomination.id) }}">Match</a>
     </div>
     {% endif %}
 </div>
@@ -89,26 +79,22 @@
 <div class="nomination closed">
     <div class="modifiable">
         <div>
-            <h2>{{ nomination['name'] }} | {{ nomination['position'] }} | {{
-                nomination['team'] }}</h2>
-            <p class="about">Nominated {{ moment(nomination['created_at']).format('LLL')
-                }} by {{ nomination['nominator_username'] }}</p>
+            <h2>{{ nomination.Nomination.name }} | {{ nomination.Nomination.position }} | {{ nomination.Nomination.team }}</h2>
+            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{ nomination.Nomination.nominator_user.username }}</p>
         </div>
-        {% if g.user['is_league_manager'] == True %}
-        <a class="action" href="{{ url_for('auction.update', id=nomination['id']) }}">Edit</a>
+        {% if g.user.is_league_manager == True %}
+        <a class="action"
+           href="{{ url_for('auction.update', id=nomination.Nomination.id) }}">Edit</a>
         {% endif %}
     </div>
 
     <div>
-        <p class="status">Auction <strong>CLOSED</strong> on: {{
-            moment(nomination['ends_at']).format('LLL') }} [Block {{ nomination['block']
-            }}]</p>
+        <p class="status">Auction <strong>CLOSED</strong> on: {{ moment(nomination.Nomination.slot.ends_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]</p>
     </div>
     <br>
 
     <div>
-        <p class="status"><strong>{{ nomination['winner_username'] }}</strong> has won
-            the auction with a bid of ${{ nomination['winner_value'] }}!</p>
+        <p class="status"><strong>{{ nomination.Nomination.winner_user.username }}</strong> has won the auction with a bid of ${{ nomination.Nomination.bids[0].value }}!</p>
     </div>
 </div>
 {% endfor %}

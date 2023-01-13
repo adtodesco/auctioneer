@@ -1,89 +1,47 @@
+from datetime import datetime
+
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from werkzeug.exceptions import abort
 
+from . import db
 from .auth import login_required
 from .constants import POSITIONS, TEAMS
-from .db import get_db
-from .utils import group_slots_by_block, query_range
+from .model import Bid, Nomination, Slot, User
+from .utils import (
+    get_open_slots,
+    get_open_slots_for_user,
+    get_user_bid_for_nomination,
+    group_slots_by_block,
+)
 
 bp = Blueprint("auction", __name__)
 
 MINIMUM_BID_VALUE = 10
 MAX_NOMINATIONS_PER_BLOCK = 2
 
-BASE_QUERY = """
-SELECT nomination.id,
-    nomination.name,
-    nomination.position,
-    nomination.team,
-    nomination.created_at,
-    slot.id as slot_id,
-    slot.ends_at,
-    slot.block,
-    nomination.nominator_id,
-    user_n.username as nominator_username,
-    nomination.matcher_id,
-    user_m.username as matcher_username,
-    nomination.winner_id,
-    user_w.username as winner_username,
-    bid_w.value as winner_value
-FROM nomination
-LEFT JOIN slot ON nomination.slot_id = slot.id
-LEFT JOIN user user_n ON nomination.nominator_id = user_n.id
-LEFT JOIN user user_m ON nomination.matcher_id = user_m.id
-LEFT JOIN user user_w ON nomination.winner_id = user_w.id
-LEFT JOIN bid bid_w ON nomination.id = bid_w.nomination_id AND nomination.winner_id = bid_w.user_id
-ORDER by slot.ends_at DESC
-"""
-
-USER_QUERY = """
-SELECT nomination.id,
-    nomination.name,
-    nomination.position,
-    nomination.team,
-    nomination.created_at,
-    slot.id as slot_id,
-    slot.ends_at,
-    slot.block,
-    nomination.nominator_id,
-    user_n.username as nominator_username,
-    nomination.matcher_id,
-    user_m.username as matcher_username,
-    nomination.winner_id,
-    user_w.username as winner_username,
-    bid_w.value as winner_value,
-    bid_u.value as user_value
-FROM nomination
-LEFT JOIN slot ON nomination.slot_id = slot.id
-LEFT JOIN user user_n ON nomination.nominator_id = user_n.id
-LEFT JOIN user user_m ON nomination.matcher_id = user_m.id
-LEFT JOIN user user_w ON nomination.winner_id = user_w.id
-LEFT JOIN bid bid_w ON nomination.id = bid_w.nomination_id AND nomination.winner_id = bid_w.user_id
-LEFT JOIN bid bid_u ON nomination.id = bid_u.nomination_id
-WHERE bid_u.user_id = ?
-ORDER by slot.ends_at DESC
-"""
-
 
 @bp.route("/")
 def index():
-    db = get_db()
     if g.user:
-        nominations = db.execute(USER_QUERY, (g.user["id"],)).fetchall()
+        statement = db.select(Nomination, Bid).join(Bid).where(Bid.user_id == g.user.id)
     else:
-        nominations = db.execute(BASE_QUERY).fetchall()
+        statement = db.select(Nomination)
+    result = db.session.execute(statement)
 
     open_nominations = list()
     match_nominations = list()
     closed_nominations = list()
-    for nomination in nominations:
-        if nomination["winner_id"]:
-            if nomination["matcher_id"]:
-                match_nominations.append(nomination)
+
+    for row in result:
+        if row.Nomination.slot.ends_at < datetime.utcnow():
+            if row.Nomination.winner_id:
+                closed_nominations.append(row)
+            elif row.Nomination.matcher_id:
+                match_nominations.append(row)
             else:
-                closed_nominations.append(nomination)
+                open_nominations.append(row)
         else:
-            open_nominations.append(nomination)
+            open_nominations.append(row)
 
     return render_template(
         "auction/index.html",
@@ -96,6 +54,17 @@ def index():
 @bp.route("/nominate", methods=("GET", "POST"))
 @login_required
 def nominate():
+    users = db.session.execute(db.select(User)).scalars().all()
+    slots = get_open_slots_for_user(
+        g.user.id,
+        day_range=(4, 10),
+        max_nominations_per_block=MAX_NOMINATIONS_PER_BLOCK,
+    )
+    if not slots:
+        flash(f"No nomination slots currently available for {g.user.username}.")
+
+    blocks = group_slots_by_block(slots)
+
     if request.method == "POST":
         name = request.form["name"]
         position = request.form["position"]
@@ -128,39 +97,24 @@ def nominate():
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            cur = db.execute(
-                "INSERT INTO nomination (name, position, team, slot_id, nominator_id, "
-                "matcher_id, winner_id) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?) ",
-                (
-                    name,
-                    position,
-                    team,
-                    slot_id,
-                    g.user["id"],
-                    matcher_id,
-                    None,
-                ),
+            nomination = Nomination(
+                name=name,
+                position=position,
+                team=team,
+                slot_id=slot_id,
+                nominator_id=g.user.id,
+                matcher_id=matcher_id,
+                winner_id=None,
             )
-            nomination_id = cur.lastrowid
-            users = db.execute("SELECT id FROM user")
             for user in users:
-                user_bid_value = bid_value if user["id"] == g.user["id"] else None
-                db.execute(
-                    "INSERT INTO bid (user_id, nomination_id, value) VALUES (?, ?, ?)",
-                    (user["id"], nomination_id, user_bid_value),
-                )
-            db.commit()
+                user_bid_value = bid_value if user.id == g.user.id else None
+                user.bids.append(Bid(nomination=nomination, value=user_bid_value))
+
+            db.session.add(nomination)
+            db.session.add_all(users)
+            db.session.commit()
+
             return redirect(url_for("auction.index"))
-
-    db = get_db()
-    users = db.execute("SELECT id, username from user").fetchall()
-    slots = get_open_slots_for_user(days_range=(4, 10))
-    if not slots:
-        flash(f"No nomination slots currently available for {g.user['username']}.")
-
-    blocks = group_slots_by_block(slots)
 
     return render_template(
         "auction/nominate.html",
@@ -174,8 +128,12 @@ def nominate():
 @bp.route("/<int:id>/update", methods=("GET", "POST"))
 @login_required
 def update(id):
-    if not g.user["is_league_manager"]:
+    if not g.user.is_league_manager:
         abort(403)
+
+    nomination = db.session.get(Nomination, id)
+    if nomination is None:
+        abort(404, f"Nomination for id {id} doesn't exist.")
 
     if request.method == "POST":
         name = request.form["name"]
@@ -199,24 +157,19 @@ def update(id):
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            db.execute(
-                "UPDATE nomination SET name = ?, position = ?, team = ?, slot_id = ?, "
-                "matcher_id = ?, winner_id = ? "
-                "WHERE id = ?",
-                (name, position, team, slot_id, matcher_id, winner_id, id),
-            )
-            db.commit()
+            nomination.name = name
+            nomination.position = position
+            nomination.team = team
+            nomination.slot_id = slot_id
+            nomination.matcher_id = matcher_id
+            nomination.winner_id = winner_id
+            db.session.add(nomination)
+            db.session.commit()
             return redirect(url_for("auction.index"))
 
-    db = get_db()
-    nomination = get_nomination(id)
-    users = db.execute("SELECT id, username from user").fetchall()
-
-    slots = get_open_slots()
-    current_slot = db.execute(
-        "SELECT id, block, ends_at FROM slot WHERE id = ?", (nomination["slot_id"],)
-    ).fetchone()
+    users = db.session.execute(db.select(User)).scalars().all()
+    slots = get_open_slots().scalars().all()
+    current_slot = db.session.get(Slot, nomination.slot_id)
     slots.append(current_slot)
     blocks = group_slots_by_block(slots)
 
@@ -233,17 +186,22 @@ def update(id):
 @bp.route("/<int:id>/bid", methods=("GET", "POST"))
 @login_required
 def bid(id):
-    nomination = get_nomination(id)
-    user_bid = dict(get_bid(g.user["id"], nomination["id"]))
-    if not user_bid["value"]:
-        user_bid["value"] = ""
+    nomination = db.session.get(Nomination, id)
+    if nomination is None:
+        abort(404, f"Nomination for id {id} doesn't exist.")
 
-    if request.method == "POST":
+    user_bid = get_user_bid_for_nomination(g.user.id, nomination.id)
+    if not user_bid.value:
+        user_bid.value = ""
+
+    if datetime.utcnow() > nomination.slot.ends_at:
+        flash("Auction has closed.")
+    elif request.method == "POST":
         value = request.form["value"] or None
 
         error = None
 
-        if value is None and g.user["id"] == nomination["nominator_id"]:
+        if value is None and g.user.id == nomination.nominator_id:
             error = "The nominator cannot reset their bid."
 
         if value is not None:
@@ -257,12 +215,9 @@ def bid(id):
         if error is not None:
             flash(error)
         else:
-            db = get_db()
-            db.execute(
-                "UPDATE bid SET value = ? WHERE id = ?",
-                (value, user_bid["id"]),
-            )
-            db.commit()
+            user_bid.value = value
+            db.session.add(user_bid)
+            db.session.commit()
             return redirect(url_for("auction.index"))
 
     return render_template("auction/bid.html", nomination=nomination, bid=user_bid)
@@ -271,29 +226,22 @@ def bid(id):
 @bp.route("/<int:id>/match", methods=("GET", "POST"))
 @login_required
 def match(id):
-    nomination = get_nomination(id)
+    nomination = db.session.get(Nomination, id)
+    if g.user.id != nomination.nominator_id:
+        abort(403)
 
     if request.method == "POST":
         is_match = request.form["match"] == "yes"
-
-        db = get_db()
         if is_match:
-            user_bid = get_bid(g.user["id"], nomination["id"])
-            db.execute(
-                "UPDATE bid SET value = ? WHERE id = ?",
-                (nomination["winner_value"], user_bid["id"]),
-            )
-            db.execute(
-                "UPDATE nomination SET matcher_id = ?, winner_id = ? " "WHERE id = ?",
-                (None, nomination["matcher_id"], id),
-            )
+            user_bid = get_user_bid_for_nomination(g.user.id, nomination.id)
+            user_bid.value = nomination.bids[0].value
+            nomination.winner_id = g.user.id
+            db.session.add(user_bid)
+            db.session.add(nomination)
         else:
-            # TODO: insert tiebreaking logic here if applicable
-            db.execute(
-                "UPDATE nomination SET matcher_id = ? " "WHERE id = ?",
-                (None, id),
-            )
-        db.commit()
+            # TODO: Close nomination
+            pass
+        db.session.commit()
         return redirect(url_for("auction.index"))
 
     return render_template("auction/match.html", nomination=nomination, bid=bid)
@@ -302,110 +250,10 @@ def match(id):
 @bp.route("/<int:id>/delete", methods=("POST",))
 @login_required
 def delete(id):
-    if not g.user["is_league_manager"]:
+    if not g.user.is_league_manager:
         abort(403)
 
-    get_nomination(id)
-    db = get_db()
-    db.execute("DELETE FROM nomination WHERE id = ?", (id,))
-    db.execute("DELETE FROM bid WHERE nomination_id = ?", (id,))
-    db.commit()
+    nomination = db.session.get(Nomination, id)
+    db.session.delete(nomination)
+    db.session.commit()
     return redirect(url_for("auction.index"))
-
-
-NOMINATION_QUERY = """
-SELECT nomination.id,
-    nomination.name,
-    nomination.position,
-    nomination.team,
-    nomination.created_at,
-    slot.id as slot_id,
-    slot.ends_at,
-    slot.block,
-    nomination.nominator_id,
-    user_n.username as nominator_username,
-    nomination.matcher_id,
-    user_m.username as matcher_username,
-    nomination.winner_id,
-    user_w.username as winner_username,
-    bid_w.value as winner_value
-FROM nomination
-LEFT JOIN slot ON nomination.slot_id = slot.id
-LEFT JOIN user user_n ON nomination.nominator_id = user_n.id
-LEFT JOIN user user_m ON nomination.matcher_id = user_m.id
-LEFT JOIN user user_w ON nomination.winner_id = user_w.id
-LEFT JOIN bid bid_w ON nomination.id = bid_w.nomination_id AND nomination.winner_id = bid_w.user_id
-WHERE nomination.id = ?
-"""
-
-
-def get_nomination(id):
-    nomination = get_db().execute(NOMINATION_QUERY, (id,)).fetchone()
-
-    if nomination is None:
-        abort(404, f"Player id {id} doesn't exist.")
-
-    return nomination
-
-
-def get_bid(user_id, nomination_id):
-    bid = (
-        get_db()
-        .execute(
-            "SELECT b.id, user_id, nomination_id, value "
-            "FROM bid b "
-            "WHERE user_id = ? AND nomination_id = ?",
-            (user_id, nomination_id),
-        )
-        .fetchone()
-    )
-
-    if bid is None:
-        abort(
-            404,
-            f"Bid for user id {user_id} and nomination id {nomination_id} doesn't "
-            f"exist.",
-        )
-
-    return bid
-
-
-def get_open_slots(days_range=None):
-    db = get_db()
-    if days_range:
-        slots = db.execute(
-            "SELECT slot.id, block, ends_at FROM slot "
-            "LEFT JOIN nomination ON slot.id = nomination.slot_id "
-            "WHERE nomination.slot_id IS NULL "
-            "AND ends_at BETWEEN ? AND ?",
-            (query_range(days_range)),
-        ).fetchall()
-    else:
-        slots = db.execute(
-            "SELECT slot.id, block, ends_at FROM slot "
-            "LEFT JOIN nomination ON slot.id = nomination.slot_id "
-            "WHERE nomination.slot_id IS NULL "
-        ).fetchall()
-
-    return slots
-
-
-def get_open_slots_for_user(days_range=(4, 10)):
-    slots = get_open_slots(days_range)
-
-    db = get_db()
-    user_nominations = db.execute(
-        "SELECT block, COUNT(*) as count FROM slot "
-        "LEFT JOIN nomination ON slot.id = nomination.slot_id "
-        "WHERE nomination.nominator_id = ? AND ends_at BETWEEN ? AND ? GROUP BY block",
-        (g.user["id"], *(query_range(days_range))),
-    ).fetchall()
-
-    user_nominations_per_block = {n["block"]: int(n["count"]) for n in user_nominations}
-
-    user_slots = list()
-    for slot in slots:
-        if user_nominations_per_block.get(slot["block"], 0) < MAX_NOMINATIONS_PER_BLOCK:
-            user_slots.append(slot)
-
-    return user_slots
