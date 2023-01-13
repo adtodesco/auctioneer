@@ -6,20 +6,11 @@
 
 {% block content %}
 <form method="post">
-    <label for="name">Name</label>
-    <input name="name" id="name" value="{{ request.form['name'] }}" required>
-    <label for="position">Position</label>
-    <select name="position" id="position" required>
-        <option disabled selected value="">-- Select a position --</option>
-        {% for pos in positions %}
-        <option value="{{ pos }}">{{ pos }}</option>
-        {% endfor %}
-    </select>
-    <label for="team">Team</label>
-    <select name="team" id="team" required>
-        <option disabled selected value="">-- Select a team --</option>
-        {% for team in teams %}
-        <option value="{{ team }}">{{ team }}</option>
+    <label for="player_id">Player</label>
+    <select name="player_id" id="player_id" required>
+        <option disabled selected value="">-- Select a player --</option>
+        {% for player in players %}
+        <option value="{{ player.id }}">{{ player.name }} ({{ player.position }}, {{ player.team }})</option>
         {% endfor %}
     </select>
     <label for="slot_id">Auction ends (UTC)</label>

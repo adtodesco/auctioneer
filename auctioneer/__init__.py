@@ -33,7 +33,7 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
-    from .model import Bid, Nomination, Slot, User
+    from .model import Bid, Nomination, Player, Slot, User
 
     with app.app_context():
         db.create_all()

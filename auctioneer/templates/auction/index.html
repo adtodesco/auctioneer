@@ -13,7 +13,7 @@
 <div class="nomination opened">
     <div class="modifiable">
         <div>
-            <h2>{{ nomination.Nomination.name }} | {{ nomination.Nomination.position }} | {{ nomination.Nomination.team }}</h2>
+            <h2>{{ nomination.Nomination.player.name }} | {{ nomination.Nomination.player.position }} | {{ nomination.Nomination.player.team }}</h2>
             <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{ nomination.Nomination.nominator_user.username }}</p>
         </div>
         {% if g.user.is_league_manager == True %}
@@ -25,7 +25,7 @@
     <div>
         <p class="status">Auction <strong>OPEN</strong> until: {{ moment(nomination.Nomination.slot.ends_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]</p>
         {% if nomination.Nomination.matcher_id %}
-        <p class="match">Match rights: <strong>{{ nomination.Nomination.matcher_username }}</strong></p>
+        <p class="match">Match rights: <strong>{{ nomination.Nomination.matcher_user.username }}</strong></p>
         {% endif %}
     </div>
 
@@ -46,7 +46,7 @@
 <div class="nomination matching">
     <div class="modifiable">
         <div>
-            <h2>{{ nomination.Nomination.name }} | {{ nomination.Nomination.position }} | {{ nomination.Nomination.team }}</h2>
+            <h2>{{ nomination.Nomination.player.name }} | {{ nomination.Nomination.player.position }} | {{ nomination.Nomination.player.team }}</h2>
             <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{ nomination.Nomination.nominator_user.username }}</p>
         </div>
         {% if g.user.is_league_manager == True %}
@@ -65,7 +65,7 @@
     {% if g.user.id == nomination.Nomination.matcher_id %}
     <div class="modifiable">
         <div>
-            <p class="bid">Match the ${{ nomination.Nomination.bids[0].value }} bid for {{nomination.Nomination.name }}?</p>
+            <p class="bid">Match the ${{ nomination.Nomination.bids[0].value }} bid for {{nomination.Nomination.player.name }}?</p>
         </div>
         <a class="action"
            href="{{ url_for('auction.match', id=nomination.Nomination.id) }}">Match</a>
@@ -79,7 +79,7 @@
 <div class="nomination closed">
     <div class="modifiable">
         <div>
-            <h2>{{ nomination.Nomination.name }} | {{ nomination.Nomination.position }} | {{ nomination.Nomination.team }}</h2>
+            <h2>{{ nomination.Nomination.player.name }} | {{ nomination.Nomination.player.position }} | {{ nomination.Nomination.player.team }}</h2>
             <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{ nomination.Nomination.nominator_user.username }}</p>
         </div>
         {% if g.user.is_league_manager == True %}

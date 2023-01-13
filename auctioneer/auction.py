@@ -6,7 +6,7 @@ from werkzeug.exceptions import abort
 from . import db
 from .auth import login_required
 from .constants import POSITIONS, TEAMS
-from .model import Bid, Nomination, Slot, User
+from .model import Bid, Nomination, Player, Slot, User
 from .utils import (
     get_open_slots,
     get_open_slots_for_user,
@@ -55,6 +55,14 @@ def index():
 @login_required
 def nominate():
     users = db.session.execute(db.select(User)).scalars().all()
+
+    statement = db.select(Player).where(
+        ~db.exists().where(Nomination.player_id == Player.id)
+    ).order_by(Player.name)
+    players = db.session.execute(statement).scalars().all()
+    if not players:
+        flash(f"No available players remaining.")
+
     slots = get_open_slots_for_user(
         g.user.id,
         day_range=(4, 10),
@@ -66,21 +74,15 @@ def nominate():
     blocks = group_slots_by_block(slots)
 
     if request.method == "POST":
-        name = request.form["name"]
-        position = request.form["position"]
-        team = request.form["team"]
+        player_id = request.form["player_id"]
         slot_id = request.form["slot_id"]
         matcher_id = request.form["matcher_id"] or None
         bid_value = request.form["bid_value"]
 
         error = None
 
-        if not name:
-            error = "Name is required."
-        elif not position:
-            error = "Position is required."
-        elif not team:
-            error = "Team is required."
+        if not player_id:
+            error = "Player is required."
         elif not slot_id:
             error = "Ends at date time is required."
         elif not bid_value:
@@ -98,9 +100,7 @@ def nominate():
             flash(error)
         else:
             nomination = Nomination(
-                name=name,
-                position=position,
-                team=team,
+                player_id=player_id,
                 slot_id=slot_id,
                 nominator_id=g.user.id,
                 matcher_id=matcher_id,
@@ -121,6 +121,7 @@ def nominate():
         teams=TEAMS,
         positions=POSITIONS,
         users=users,
+        players=players,
         blocks=blocks,
     )
 
@@ -136,30 +137,18 @@ def update(id):
         abort(404, f"Nomination for id {id} doesn't exist.")
 
     if request.method == "POST":
-        name = request.form["name"]
-        position = request.form["position"]
-        team = request.form["team"]
         slot_id = request.form["slot_id"]
         matcher_id = request.form["matcher_id"] or None
         winner_id = request.form["winner_id"] or None
 
         error = None
 
-        if not name:
-            error = "Name is required."
-        elif not position:
-            error = "Position is required."
-        elif not team:
-            error = "Team is required."
-        elif not slot_id:
+        if not slot_id:
             error = "Ends at date time is required."
 
         if error is not None:
             flash(error)
         else:
-            nomination.name = name
-            nomination.position = position
-            nomination.team = team
             nomination.slot_id = slot_id
             nomination.matcher_id = matcher_id
             nomination.winner_id = winner_id

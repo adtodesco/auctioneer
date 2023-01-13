@@ -1,34 +1,11 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Edit "{{ nomination.name }}"{% endblock %}</h1>
+<h1>{% block title %}Edit "{{ nomination.player.name }}"{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <form method="post">
-    <label for="name">Name</label>
-    <input name="name" id="name"
-           value="{{ request.form['name'] or nomination.name }}" required>
-    <label for="position">Position</label>
-    <select name="position" id="position" required>
-        {% for pos in positions %}
-        {% if pos == nomination.position %}
-        <option value="{{ pos }}" selected>{{ pos }}</option>
-        {% else %}
-        <option value="{{ pos }}">{{ pos }}</option>
-        {% endif %}
-        {% endfor %}
-    </select>
-    <label for="team">Team</label>
-    <select name="team" id="team" required>
-        {% for team in teams %}
-        {% if team == nomination.team %}
-        <option value="{{ team }}" selected>{{ team }}</option>
-        {% else %}
-        <option value="{{ team }}">{{ team }}</option>
-        {% endif %}
-        {% endfor %}
-    </select>
     <label for="slot_id">Auction ends (UTC)</label>
     <select name="slot_id" id="slot_id" required>
         <option disabled selected value="">-- Select an end time --</option>

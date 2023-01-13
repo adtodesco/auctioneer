@@ -17,6 +17,19 @@ class User(db.Model):
         return "<User {}>".format(self.username)
 
 
+class Player(db.Model):
+    __tablename__ = "player"
+
+    id = db.Column(db.Integer, primary_key=True)
+    fantrax_id = db.Column(db.String, index=True, nullable=False, unique=True)
+    name = db.Column(db.String, nullable=False)
+    position = db.Column(db.String, nullable=False)
+    team = db.Column(db.String, nullable=False)
+
+    # One-to-one relationships
+    nomination = db.relationship("Nomination", back_populates="player")
+
+
 class Slot(db.Model):
     __tablename__ = "slot"
 
@@ -32,9 +45,9 @@ class Nomination(db.Model):
     __tablename__ = "nomination"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    position = db.Column(db.String, nullable=False)
-    team = db.Column(db.String, nullable=False)
+    player_id = db.Column(
+        db.Integer, db.ForeignKey("player.id"), unique=True, nullable=False
+    )
     slot_id = db.Column(
         db.Integer, db.ForeignKey("slot.id"), unique=True, nullable=False
     )
@@ -44,6 +57,7 @@ class Nomination(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
 
     # One-to-one relationships
+    player = db.relationship("Player", back_populates="nomination")
     slot = db.relationship("Slot", back_populates="nomination")
     nominator_user = db.relationship("User", foreign_keys=nominator_id)
     matcher_user = db.relationship("User", foreign_keys=matcher_id)
