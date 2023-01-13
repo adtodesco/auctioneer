@@ -1,6 +1,15 @@
 from datetime import datetime
 
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    Response,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from werkzeug.exceptions import abort
 
 from . import db
@@ -56,9 +65,11 @@ def index():
 def nominate():
     users = db.session.execute(db.select(User)).scalars().all()
 
-    statement = db.select(Player).where(
-        ~db.exists().where(Nomination.player_id == Player.id)
-    ).order_by(Player.name)
+    statement = (
+        db.select(Player)
+        .where(~db.exists().where(Nomination.player_id == Player.id))
+        .order_by(Player.name)
+    )
     players = db.session.execute(statement).scalars().all()
     if not players:
         flash(f"No available players remaining.")
@@ -246,3 +257,33 @@ def delete(id):
     db.session.delete(nomination)
     db.session.commit()
     return redirect(url_for("auction.index"))
+
+
+@bp.route("/results")
+@login_required
+def results():
+    def generate(headers, rows):
+        yield ",".join(headers) + "\n"
+        for row in rows:
+            yield ",".join(row) + "\n"
+
+    nominations = db.session.execute(
+        db.select(Nomination).where(Nomination.winner_id.is_not(None))
+    )
+    results_headers = ["Fantrax ID", "Player", "Position", "Team", "Winner", "Bids"]
+    results_rows = [
+        [
+            nomination.player.fantrax_id,
+            nomination.player.name,
+            nomination.player.position,
+            nomination.player.team,
+            nomination.winner_user.username,
+            ";".join([str(b.value) for b in nomination.bids]),
+        ]
+        for nomination in nominations.scalars()
+    ]
+
+    return Response(
+        generate(results_headers, results_rows),
+        mimetype="text/csv",
+    )
