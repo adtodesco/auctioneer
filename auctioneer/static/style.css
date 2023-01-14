@@ -5,6 +5,7 @@ a { color: #377ba8; }
 hr { border: none; border-top: 1px solid lightgray; }
 nav { background: lightgray; display: flex; align-items: center; padding: 0; }
 nav h1 { margin: 0.5rem; }
+nav h1 > a { color: #000000; }
 nav h1 a { text-decoration: none; padding: 0.25rem 0.5rem; }
 nav div { flex: auto; display: flex; justify-content: space-between; }
 nav ul  { display: flex; list-style: none; margin: 0; padding: 0; }

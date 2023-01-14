@@ -4,7 +4,7 @@
 <title>The DOO Auction - {% block title %}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <nav>
-    <h1>The DOO Auction</h1>
+    <h1><a href="{{ url_for('auction.index') }}">The DOO Auction</a></h1>
     <div>
         <ul>
             <li><a class="action" href="{{ url_for('auction.index') }}">Nominations</a></li>
