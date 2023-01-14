@@ -1,13 +1,18 @@
 version: "3.8"
 
 services:
-  auctioneer:
-    build:
-      context: .
+  web:
+    build: .
     ports:
-      - 443:8000
+      - 8000:8000
     volumes:
       - sqlite-instance:/auctioneer/instance
+  nginx:
+    build: ./nginx
+    ports:
+      - 80:80
+    depends_on:
+      - web
 
 volumes:
   sqlite-instance:

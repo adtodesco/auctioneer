@@ -14,7 +14,10 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY="dev",
         SQLALCHEMY_DATABASE_URI="sqlite:///auctioneer.sqlite",
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        STATIC_FOLDER=os.path.join(app.root_path, "/static"),
     )
+    print(f"STATIC_FOLDER IS: {app.config['STATIC_FOLDER']}")
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -50,6 +53,10 @@ def create_app(test_config=None):
     from . import tiebreaker
 
     app.register_blueprint(tiebreaker.bp)
+
+    from . import static
+
+    app.register_blueprint(static.bp)
 
     from .commands import init_db_command
 
