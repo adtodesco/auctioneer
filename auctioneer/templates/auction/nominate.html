@@ -24,9 +24,9 @@
         </optgroup>
         {% endfor %}
     </select>
-    <label for="matcher_id">Matcher</label>
+    <label for="matcher_id">Match rights</label>
     <select name="matcher_id" id="matcher_id">
-        <option selected value="">No matcher</option>
+        <option selected value="">None</option>
         {% for user in users %}
         <option value="{{ user.id }}">{{ user.username }}</option>
         {% endfor %}

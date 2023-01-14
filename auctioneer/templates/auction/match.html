@@ -6,7 +6,7 @@
 
 {% block content %}
 <form method="post">
-    <label for="match">Would you like to match the bid of ${{ nomination.bids[0].value }}?</label>
+    <label for="match">>Match the ${{ nomination.Nomination.bids[0].value }} bid for {{nomination.Nomination.player.name }}?</label>
     <select name="match" id="match" required>
         <option disabled selected value="">-- Select yes or no --</option>
         <option value="yes">Yes</option>
