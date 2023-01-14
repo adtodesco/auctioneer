@@ -17,7 +17,6 @@ def create_app(test_config=None):
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         STATIC_FOLDER=os.path.join(app.root_path, "/static"),
     )
-    print(f"STATIC_FOLDER IS: {app.config['STATIC_FOLDER']}")
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
