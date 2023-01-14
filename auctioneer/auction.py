@@ -17,6 +17,7 @@ from .auth import login_required
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
 from .utils import (
+    close_nomination,
     get_open_slots,
     get_open_slots_for_user,
     get_user_bid_for_nomination,
@@ -238,10 +239,10 @@ def match(id):
             nomination.winner_id = g.user.id
             db.session.add(user_bid)
             db.session.add(nomination)
+            db.session.commit()
         else:
-            # TODO: Close nomination
-            pass
-        db.session.commit()
+            close_nomination(nomination)
+
         return redirect(url_for("auction.index"))
 
     return render_template("auction/match.html", nomination=nomination, bid=bid)

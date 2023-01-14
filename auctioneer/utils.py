@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from auctioneer import db
-from auctioneer.model import Bid, Nomination, Slot
+from auctioneer.model import Bid, Nomination, Slot, User
 
 
 def day_range_to_times(day_range):
@@ -75,3 +75,55 @@ def group_slots_by_block(slots):
         blocks[block] = sorted(blocks[block], key=lambda b: b.ends_at)
 
     return blocks
+
+
+def drop_to_tiebreaker_bottom(winning_user):
+    users = db.session.execute(db.select(User)).scalars().all()
+
+    updates = dict()
+    max_tiebreaker_order = 0
+    for user in users:
+        if (
+            user.tiebreaker_order is not None
+            and user.tiebreaker_order > winning_user.tiebreaker_order
+        ):
+            if user.tiebreaker_order > max_tiebreaker_order:
+                max_tiebreaker_order = user.tiebreaker_order
+            updates[user.id] = user.tiebreaker_order - 1
+            user.tiebreaker_order = None
+
+    if updates:
+        updates[winning_user.id] = max_tiebreaker_order
+        winning_user.tiebreaker_order = None
+
+        db.session.add_all(users)
+        db.session.flush()
+        for user_id, tiebreaker_order in updates.items():
+            user = db.session.get(User, user_id)
+            user.tiebreaker_order = tiebreaker_order
+            db.session.add(user)
+        db.session.commit()
+
+
+def close_nomination(nomination):
+    winning_bid_value = nomination.bids[0].value
+    winning_users = list()
+    for bid in nomination.bids:
+        if bid.value == winning_bid_value:
+            winning_users.append(bid.user)
+
+    if len(winning_users) > 1:
+        winning_user = winning_users[0]
+        for user in winning_users[1:]:
+            if (
+                user.tiebreaker_order is not None
+                and user.tiebreaker_order < winning_user.tiebreaker_order
+            ):
+                winning_user = user
+        drop_to_tiebreaker_bottom(winning_user)
+    else:
+        winning_user = winning_users[0]
+
+    nomination.winner_id = winning_user.id
+    db.session.add(nomination)
+    db.session.commit()

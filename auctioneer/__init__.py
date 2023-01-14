@@ -57,8 +57,9 @@ def create_app(test_config=None):
 
     app.register_blueprint(static.bp)
 
-    from .commands import init_db_command
+    from .commands import init_db_command, close_nominations_command
 
     app.cli.add_command(init_db_command)
+    app.cli.add_command(close_nominations_command)
 
     return app

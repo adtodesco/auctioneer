@@ -40,8 +40,10 @@ def edit():
                 tiebreaker_order = request.form[name]
                 try:
                     tiebreaker_order = int(tiebreaker_order)
+                    if tiebreaker_order <= 0:
+                        raise ValueError()
                 except ValueError:
-                    error = "Tiebreaker order values must be integers."
+                    error = "Tiebreaker order values must be positive integers."
                     break
 
                 if tiebreaker_order != user.tiebreaker_order:
