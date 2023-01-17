@@ -1,8 +1,19 @@
 <!doctype html>
 <html style="background-image: url({{ url_for('static', filename='thedoologo.png') }});background-size: 20%;">
-<head>{{ moment.include_moment() }}</head>
-<title>The DOO Auction - {% block title %}{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<head>
+    <title>The DOO Auction - {% block title %}{% endblock %}</title>
+    {{ moment.include_moment() }}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script>
+      $(function(){
+        $("select").select2();
+      });
+    </script>
+</head>
 <nav>
     <h1><a href="{{ url_for('auction.index') }}">The DOO Auction</a></h1>
     <div>
