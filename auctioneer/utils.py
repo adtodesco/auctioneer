@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 
-from auctioneer import db
-from auctioneer.model import Bid, Nomination, Slot, User
+import pytz
+
+from . import db
+from .model import Bid, Nomination, Slot, User
 
 
 def day_range_to_times(day_range):
@@ -127,3 +129,12 @@ def close_nomination(nomination):
     nomination.winner_id = winning_user.id
     db.session.add(nomination)
     db.session.commit()
+
+
+def convert_slots_timezone(slots, timezone="US/Eastern"):
+    for slot in slots:
+        slot.ends_at = slot.ends_at.replace(tzinfo=pytz.utc).astimezone(
+            pytz.timezone(timezone)
+        )
+
+    return slots

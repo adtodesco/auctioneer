@@ -4,12 +4,13 @@ import click
 from flask import current_app
 
 from . import db
-from .model import Nomination, Slot
+from .model import Nomination, Notification, Slot
+from .slack import add_auction_won_notification, send_notification
 from .utils import close_nomination
 
 
 def init_db():
-    from .model import Bid, Nomination, Player, Slot, User
+    from .model import Bid, Nomination, Notification, Player, Slot, User
 
     with current_app.app_context():
         db.drop_all()
@@ -61,6 +62,7 @@ def close_nominations():
     nominations = db.session.execute(statement).scalars().all()
     for nomination in nominations:
         close_nomination(nomination)
+        add_auction_won_notification(nomination)
 
     return nominations
 
@@ -70,3 +72,27 @@ def close_nominations_command():
     """Close any open nominations passed the slot end and/or match end."""
     nominations = close_nominations()
     click.echo(f"Closed {len(nominations)} nominations.")
+
+
+def send_notifications():
+    statement = (
+        db.select(Notification)
+        .where(Notification.sent.is_(False))
+        .where(Notification.send_at < datetime.utcnow())
+    )
+    notifications = db.session.execute(statement).scalars().all()
+
+    notifications_sent = list()
+    for notification in notifications:
+        success = send_notification(notification)
+        if success:
+            notifications_sent.append(notification)
+
+    return notifications_sent
+
+
+@click.command("send-notifications")
+def send_notifications_command():
+    """Send unsent notifications passed their send_at timestamp."""
+    notifications = send_notifications()
+    click.echo(f"Sent {len(notifications)} notifications.")

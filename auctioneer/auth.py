@@ -23,6 +23,7 @@ def register():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
+        slack_id = request.form["slack_id"] or None
         is_league_manager = True if "is_league_manager" in request.form else False
 
         error = None
@@ -37,6 +38,7 @@ def register():
                 user = User(
                     username=username,
                     password=generate_password_hash(password),
+                    slack_id=slack_id,
                     is_league_manager=is_league_manager,
                 )
                 db.session.add(user)

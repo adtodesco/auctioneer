@@ -35,7 +35,7 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
-    from .model import Bid, Nomination, Player, Slot, User
+    from .model import Bid, Nomination, Notification, Player, Slot, User
 
     with app.app_context():
         db.create_all()
@@ -57,9 +57,14 @@ def create_app(test_config=None):
 
     app.register_blueprint(static.bp)
 
-    from .commands import init_db_command, close_nominations_command
+    from .commands import (
+        close_nominations_command,
+        init_db_command,
+        send_notifications_command,
+    )
 
     app.cli.add_command(init_db_command)
     app.cli.add_command(close_nominations_command)
+    app.cli.add_command(send_notifications_command)
 
     return app

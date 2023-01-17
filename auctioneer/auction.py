@@ -16,8 +16,10 @@ from . import db
 from .auth import login_required
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
+from .slack import add_auction_won_notification
 from .utils import (
     close_nomination,
+    convert_slots_timezone,
     get_open_slots,
     get_open_slots_for_user,
     get_user_bid_for_nomination,
@@ -28,6 +30,8 @@ bp = Blueprint("auction", __name__)
 
 MINIMUM_BID_VALUE = 10
 MAX_NOMINATIONS_PER_BLOCK = 2
+MATCH_TIME_HOURS = 24
+NOMINATION_DAY_RANGE = (4, 10)
 
 
 @bp.route("/")
@@ -77,7 +81,7 @@ def nominate():
 
     slots = get_open_slots_for_user(
         g.user.id,
-        day_range=(4, 10),
+        day_range=NOMINATION_DAY_RANGE,
         max_nominations_per_block=MAX_NOMINATIONS_PER_BLOCK,
     )
     if not slots:
@@ -128,6 +132,9 @@ def nominate():
 
             return redirect(url_for("auction.index"))
 
+    for slots in blocks.values():
+        convert_slots_timezone(slots)
+
     return render_template(
         "auction/nominate.html",
         teams=TEAMS,
@@ -173,6 +180,9 @@ def update(id):
     current_slot = db.session.get(Slot, nomination.slot_id)
     slots.append(current_slot)
     blocks = group_slots_by_block(slots)
+
+    for slots in blocks.values():
+        convert_slots_timezone(slots)
 
     return render_template(
         "auction/update.html",
@@ -242,6 +252,8 @@ def match(id):
             db.session.commit()
         else:
             close_nomination(nomination)
+
+        add_auction_won_notification(nomination)
 
         return redirect(url_for("auction.index"))
 

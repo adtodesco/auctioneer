@@ -13,13 +13,13 @@
         <option value="{{ player.id }}">{{ player.name }} ({{ player.position }}, {{ player.team }})</option>
         {% endfor %}
     </select>
-    <label for="slot_id">Auction ends (UTC)</label>
+    <label for="slot_id">Auction ends</label>
     <select name="slot_id" id="slot_id" required>
         <option disabled selected value="">-- Select an end time --</option>
         {% for num, slots in blocks.items() %}
         <optgroup label="Block {{ num }}">
             {% for slot in slots %}
-            <option value="{{ slot.id }}">{{ slot.ends_at }}</option>
+            <option value="{{ slot.id }}">{{ slot.ends_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
             {% endfor %}
         </optgroup>
         {% endfor %}

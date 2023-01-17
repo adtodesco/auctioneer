@@ -7,6 +7,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, index=True, nullable=False)
     password = db.Column(db.String, nullable=False)
+    slack_id = db.Column(db.String, nullable=False)
     is_league_manager = db.Column(db.Boolean, nullable=False, default=False)
     tiebreaker_order = db.Column(db.Integer, unique=True)
 
@@ -86,3 +87,14 @@ class Bid(db.Model):
     # Many-to-one relationships
     user = db.relationship("User", back_populates="bids")
     nomination = db.relationship("Nomination", back_populates="bids")
+
+
+class Notification(db.Model):
+    __tablename__ = "notification"
+
+    id = db.Column(db.Integer, primary_key=True)
+    sent = db.Column(db.Boolean, nullable=False, default=False)
+    title = db.Column(db.String)
+    message = db.Column(db.String)
+    send_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
