@@ -4,9 +4,16 @@ import click
 from flask import current_app
 
 from . import db
+from .auction import MAX_NOMINATIONS_PER_BLOCK, NOMINATION_DAY_RANGE
 from .model import Nomination, Notification, Slot
-from .slack import add_auction_won_notification, send_notification
-from .utils import close_nomination
+from .slack import (
+    add_auction_won_notification,
+    add_auctions_closing_notification,
+    add_block_closing_notification,
+    add_block_open_notification,
+    send_notification,
+)
+from .utils import close_nomination, group_slots_by_block
 
 
 def init_db():
@@ -17,25 +24,38 @@ def init_db():
         db.create_all()
 
     with current_app.open_resource("data/players.csv") as f:
-        players = list(
+        player_lines = list(
             s.decode("utf-8").strip("\n").replace('"', "").split(",")
             for s in f.readlines()
         )
 
-    rows = [
+    players = [
         Player(fantrax_id=player[0], name=player[1], team=player[2], position=player[3])
-        for player in players
+        for player in player_lines
     ]
-    db.session.add_all(rows)
+    db.session.add_all(players)
 
     with current_app.open_resource("data/slots.csv") as f:
-        slots = list(s.decode("utf-8").strip("\n").split(",") for s in f.readlines())
+        slot_lines = list(
+            s.decode("utf-8").strip("\n").split(",") for s in f.readlines()
+        )
 
-    rows = [
+    slots = [
         Slot(block=slot[0], ends_at=datetime.strptime(slot[1], "%Y-%m-%d %H:%M:%S"))
-        for slot in slots
+        for slot in slot_lines
     ]
-    db.session.add_all(rows)
+    db.session.add_all(slots)
+
+    blocks = group_slots_by_block(slots)
+    for num, slots in blocks.items():
+        block_opens_at = slots[-1].ends_at - timedelta(days=NOMINATION_DAY_RANGE[1])
+        block_closes_at = slots[0].ends_at - timedelta(days=NOMINATION_DAY_RANGE[0])
+        add_block_open_notification(
+            num, block_opens_at, block_closes_at, MAX_NOMINATIONS_PER_BLOCK
+        )
+        add_block_closing_notification(num, block_closes_at, MAX_NOMINATIONS_PER_BLOCK)
+        add_auctions_closing_notification(num, slots[0].ends_at)
+
     db.session.commit()
 
 
