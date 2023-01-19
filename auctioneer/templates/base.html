@@ -1,6 +1,7 @@
 <!doctype html>
 <html style="background-image: url({{ url_for('static', filename='thedoologo.png') }});background-size: 20%;">
 <head>
+    {% block head %}
     <title>The DOO Auction - {% block title %}{% endblock %}</title>
     {{ moment.include_moment() }}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -13,6 +14,7 @@
         $("select").select2();
       });
     </script>
+    {% endblock %}
 </head>
 <nav>
     <h1><a href="{{ url_for('auction.index') }}">The DOO Auction</a></h1>
