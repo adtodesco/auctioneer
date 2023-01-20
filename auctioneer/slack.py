@@ -6,10 +6,6 @@ from slack_sdk import WebhookClient
 from auctioneer import db
 from auctioneer.model import Notification
 
-WEBHOOK_URL = (
-    "https://hooks.slack.com/services/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"
-)
-
 
 def add_block_open_notification(
     block_number, block_opens_at, block_closes_at, max_nominations_per_block
@@ -116,8 +112,8 @@ def format_slack_blocks(title, message):
     ]
 
 
-def send_notification(notification):
-    webhook = WebhookClient(WEBHOOK_URL)
+def send_notification(notification, webhook_url):
+    webhook = WebhookClient(webhook_url)
     response = webhook.send(
         blocks=format_slack_blocks(notification.title, notification.message)
     )

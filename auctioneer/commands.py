@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 
 import click
@@ -94,7 +95,7 @@ def close_nominations_command():
     click.echo(f"Closed {len(nominations)} nominations.")
 
 
-def send_notifications():
+def send_notifications(webhook_url):
     statement = (
         db.select(Notification)
         .where(Notification.sent.is_(False))
@@ -104,7 +105,7 @@ def send_notifications():
 
     notifications_sent = list()
     for notification in notifications:
-        success = send_notification(notification)
+        success = send_notification(notification, webhook_url)
         if success:
             notifications_sent.append(notification)
 
@@ -114,5 +115,8 @@ def send_notifications():
 @click.command("send-notifications")
 def send_notifications_command():
     """Send unsent notifications passed their send_at timestamp."""
-    notifications = send_notifications()
+    webhook_url = os.environ.get("WEBHOOK_URL")
+    if not webhook_url:
+        raise RuntimeError("WEBHOOK_URL env variable is not set!")
+    notifications = send_notifications(webhook_url)
     click.echo(f"Sent {len(notifications)} notifications.")
