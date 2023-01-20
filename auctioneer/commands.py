@@ -120,23 +120,3 @@ def send_notifications_command():
         raise RuntimeError("WEBHOOK_URL env variable is not set!")
     notifications = send_notifications(webhook_url)
     click.echo(f"Sent {len(notifications)} notifications.")
-
-
-@click.command("bulk-nominate")
-def bulk_nominate_command():
-    from .model import Player
-
-    nominations = list()
-    players = db.session.execute(db.select(Player)).scalars().all()
-    slots = db.session.execute(db.select(Slot)).scalars()
-
-    for i, slot in enumerate(slots):
-        nominations.append(
-            Nomination(
-                player_id=players[i].id,
-                slot_id=slot.id,
-                nominator_id=1,
-            )
-        )
-    db.session.add_all(nominations)
-    db.session.commit()
