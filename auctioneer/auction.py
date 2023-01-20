@@ -31,7 +31,7 @@ bp = Blueprint("auction", __name__)
 MINIMUM_BID_VALUE = 10
 MAX_NOMINATIONS_PER_BLOCK = 2
 MATCH_TIME_HOURS = 24
-NOMINATION_DAY_RANGE = (4, 10)
+NOMINATION_DAY_RANGE = (1, 2)
 
 
 @bp.route("/")
