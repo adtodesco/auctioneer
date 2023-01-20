@@ -7,6 +7,8 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - sqlite-instance:/auctioneer/instance
+    env_file:
+      - web.env
   nginx:
     build: ./nginx
     ports:
