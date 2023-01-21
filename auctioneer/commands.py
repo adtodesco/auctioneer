@@ -68,16 +68,15 @@ def init_db_command():
 
 
 def close_nominations():
+    current_datetime = datetime.utcnow()
+    match_datetime = current_datetime - timedelta(days=1)
     statement = (
         db.select(Nomination)
         .join(Slot)
         .where(Nomination.winner_id.is_(None))
         .where(
-            ((Slot.ends_at < datetime.utcnow()) & Nomination.matcher_id.is_(None))
-            | (
-                (Slot.ends_at < datetime.utcnow() + timedelta(days=1))
-                & (Nomination.matcher_id.is_not(None))
-            )
+            (Nomination.matcher_id.is_(None) & (current_datetime > Slot.ends_at))
+            | (Nomination.matcher_id.is_not(None) & (match_datetime > Slot.ends_at))
         )
     )
     nominations = db.session.execute(statement).scalars().all()
