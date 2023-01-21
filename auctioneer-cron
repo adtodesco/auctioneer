@@ -1,2 +1,2 @@
-* * * * * sleep 1 && cd /auctioneer && /usr/local/bin/flask --app auctioneer close-nominations >> /var/log/cron.log 2>&1  && /usr/local/bin/flask --app auctioneer send-notifications >> /var/log/cron.log 2>&1
+* * * * * cd /auctioneer && /usr/local/bin/flask --app auctioneer close-nominations >> /var/log/cron.log 2>&1  && /usr/local/bin/flask --app auctioneer send-notifications >> /var/log/cron.log 2>&1
 # Don't remove the empty line at the end of this file. It is required to run the cron job
