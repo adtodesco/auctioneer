@@ -16,7 +16,7 @@ from . import db
 from .auth import login_required
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
-from .slack import add_auction_won_notification
+from .slack import add_auction_won_notification, add_player_nominated_notification
 from .utils import (
     close_nomination,
     convert_slots_timezone,
@@ -136,6 +136,8 @@ def nominate():
             db.session.add(nomination)
             db.session.add_all(users)
             db.session.commit()
+
+            add_player_nominated_notification(nomination)
 
             return redirect(url_for("auction.index"))
 
