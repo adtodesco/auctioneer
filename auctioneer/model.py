@@ -15,7 +15,7 @@ class User(db.Model):
     bids = db.relationship("Bid", back_populates="user")
 
     def __repr__(self):
-        return "<User {}>".format(self.username)
+        return f"<User {self.username}>"
 
 
 class Player(db.Model):
@@ -72,6 +72,12 @@ class Nomination(db.Model):
         cascade="all, delete",
     )
 
+    def __repr__(self):
+        return (
+            f"<Nomination {self.player.name} ({self.player.position}, "
+            f"{self.player.team})>"
+        )
+
 
 class Bid(db.Model):
     __tablename__ = "bid"
@@ -88,6 +94,8 @@ class Bid(db.Model):
     user = db.relationship("User", back_populates="bids")
     nomination = db.relationship("Nomination", back_populates="bids")
 
+    def __repr__(self):
+        return f"<Bid {self.user.username} for {self.nomination.player.name}>"
 
 class Notification(db.Model):
     __tablename__ = "notification"

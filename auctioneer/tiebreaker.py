@@ -1,4 +1,13 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from werkzeug.exceptions import abort
 
 from . import db
@@ -63,6 +72,7 @@ def edit():
                 db.session.rollback()
                 error = "Tiebreaker order values must be unique."
             else:
+                current_app.logger.info(f"Tiebreaker edited by {g.user}")
                 return redirect(url_for("tiebreaker.index"))
 
         flash(error)

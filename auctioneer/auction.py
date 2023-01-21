@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import (
     Blueprint,
     Response,
+    current_app,
     flash,
     g,
     redirect,
@@ -137,6 +138,10 @@ def nominate():
             db.session.add_all(users)
             db.session.commit()
 
+            current_app.logger.info(
+                f"Nomination {nomination} created by {nomination.nominator_user}."
+            )
+
             add_player_nominated_notification(nomination)
 
             return redirect(url_for("auction.index"))
@@ -182,6 +187,7 @@ def update(id):
             nomination.winner_id = winner_id
             db.session.add(nomination)
             db.session.commit()
+            current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
             return redirect(url_for("auction.index"))
 
     users = db.session.execute(db.select(User)).scalars().all()
@@ -238,6 +244,7 @@ def bid(id):
             user_bid.value = value
             db.session.add(user_bid)
             db.session.commit()
+            current_app.logger.info(f"Bid {bid} updated by {g.user}.")
             return redirect(url_for("auction.index"))
 
     return render_template("auction/bid.html", nomination=nomination, bid=user_bid)
@@ -259,8 +266,14 @@ def match(id):
             db.session.add(user_bid)
             db.session.add(nomination)
             db.session.commit()
+            current_app.logger.info(
+                f"Match for nomination {nomination} accepted by {g.user}."
+            )
         else:
             close_nomination(nomination)
+            current_app.logger.info(
+                f"Match for nomination {nomination} declined by {g.user}."
+            )
 
         add_auction_won_notification(nomination)
 
@@ -276,8 +289,10 @@ def delete(id):
         abort(403)
 
     nomination = db.session.get(Nomination, id)
+    nomination_str = str(nomination)
     db.session.delete(nomination)
     db.session.commit()
+    current_app.logger.info(f"Nomination {nomination_str} deleted by {g.user}.")
     return redirect(url_for("auction.index"))
 
 
@@ -304,6 +319,7 @@ def results():
         ]
         for nomination in nominations.scalars()
     ]
+    current_app.logger.info(f"Results downloaded by {g.user}.")
 
     return Response(
         generate(results_headers, results_rows),
