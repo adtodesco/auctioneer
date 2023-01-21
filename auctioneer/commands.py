@@ -64,7 +64,7 @@ def init_db():
 def init_db_command():
     """Clear the existing data and create new tables."""
     init_db()
-    click.echo("Initialized the database.")
+    click.echo(f"{datetime.utcnow().isoformat()}: Initialized the database.")
 
 
 def close_nominations():
@@ -91,7 +91,9 @@ def close_nominations():
 def close_nominations_command():
     """Close any open nominations passed the slot end and/or match end."""
     nominations = close_nominations()
-    click.echo(f"Closed {len(nominations)} nominations.")
+    click.echo(
+        f"{datetime.utcnow().isoformat()}: Closed {len(nominations)} nominations."
+    )
 
 
 def send_notifications(webhook_url):
@@ -118,4 +120,6 @@ def send_notifications_command():
     if not webhook_url:
         raise RuntimeError("WEBHOOK_URL env variable is not set!")
     notifications = send_notifications(webhook_url)
-    click.echo(f"Sent {len(notifications)} notifications.")
+    click.echo(
+        f"{datetime.utcnow().isoformat()}: Sent {len(notifications)} notifications."
+    )
