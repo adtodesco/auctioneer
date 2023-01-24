@@ -134,6 +134,7 @@ def format_slack_blocks(title, message):
 def send_notification(notification, webhook_url):
     webhook = WebhookClient(webhook_url)
     response = webhook.send(
+        text=notification.title,
         blocks=format_slack_blocks(notification.title, notification.message)
     )
     if response.status_code == 200:
