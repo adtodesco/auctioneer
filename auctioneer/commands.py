@@ -9,9 +9,9 @@ from .auction import MAX_NOMINATIONS_PER_BLOCK, NOMINATION_DAY_RANGE
 from .model import Nomination, Notification, Slot
 from .slack import (
     add_auction_won_notification,
-    add_auctions_closing_notification,
-    add_block_closing_notification,
-    add_block_open_notification,
+    add_auctions_close_notification,
+    add_nomination_period_begun_notification,
+    add_nomination_period_end_notification,
     send_notification,
 )
 from .utils import close_nomination, group_slots_by_block
@@ -51,11 +51,11 @@ def init_db():
     for num, slots in blocks.items():
         block_opens_at = slots[-1].ends_at - timedelta(days=NOMINATION_DAY_RANGE[1])
         block_closes_at = slots[0].ends_at - timedelta(days=NOMINATION_DAY_RANGE[0])
-        add_block_open_notification(
+        add_nomination_period_begun_notification(
             num, block_opens_at, block_closes_at, MAX_NOMINATIONS_PER_BLOCK
         )
-        add_block_closing_notification(num, block_closes_at, MAX_NOMINATIONS_PER_BLOCK)
-        add_auctions_closing_notification(num, slots[0].ends_at)
+        add_nomination_period_end_notification(num, block_closes_at, MAX_NOMINATIONS_PER_BLOCK)
+        add_auctions_close_notification(num, slots[0].ends_at)
 
     db.session.commit()
 

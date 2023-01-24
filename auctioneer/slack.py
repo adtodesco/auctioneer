@@ -7,7 +7,7 @@ from auctioneer import db
 from auctioneer.model import Notification
 
 
-def add_block_open_notification(
+def add_nomination_period_begun_notification(
     block_number, block_opens_at, block_closes_at, max_nominations_per_block
 ):
     block_closes_at = block_closes_at.replace(tzinfo=pytz.utc)
@@ -15,12 +15,13 @@ def add_block_open_notification(
 
     notification = Notification(
         title=(
-            f":incoming_envelope:  *Block {block_number} is now open for nominations!*"
+            f":incoming_envelope:  *Block {block_number} nomination period has begun!* "
         ),
         message=(
-            f"Make up to {max_nominations_per_block} nominations in block "
-            f"{block_number} by {block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} "
-            f"ET."
+            f"The block {block_number} nomination period has begun and will last until " 
+            f"{block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET. Head to "
+            f"http://thedooauction.com to make up to {max_nominations_per_block} "
+            f"nominations in this block!"
         ),
         send_at=block_opens_at,
     )
@@ -31,7 +32,7 @@ def add_block_open_notification(
     return notification
 
 
-def add_block_closing_notification(
+def add_nomination_period_end_notification(
     block_number, block_closes_at, max_nominations_per_block, alert_hours=2
 ):
     block_closes_at = block_closes_at.replace(tzinfo=pytz.utc)
@@ -39,13 +40,15 @@ def add_block_closing_notification(
 
     notification = Notification(
         title=(
-            f":envelope:  *Block {block_number} will start closing for nominations in "
-            f"{alert_hours} hours!*"
+            f":envelope:  *Block {block_number} nomination period ends in {alert_hours}"
+            f" hours!*"
         ),
         message=(
-            f"Make up to {max_nominations_per_block} nominations in block "
-            f"{block_number} by {block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} "
-            f"ET."
+            f"The block {block_number} nomination period will start ending in "
+            f"{alert_hours} hours. If you have not made your block {block_number} "
+            f"nominations head to http://thedooauction.com to make up to "
+            f"{max_nominations_per_block} nominations by "
+            f"{block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET."
         ),
         send_at=block_closes_at - timedelta(hours=alert_hours),
     )
@@ -56,15 +59,19 @@ def add_block_closing_notification(
     return notification
 
 
-def add_auctions_closing_notification(
+def add_auctions_close_notification(
     block_number, auctions_start_closing_at, alert_hours=2
 ):
     notification = Notification(
         title=(
-            f":rotating_light:  *Block {block_number} auctions will start closing in "
-            f"{alert_hours} hours!*"
+            f":rotating_light:  *Block {block_number} auctions closes in {alert_hours} "
+            f"hours!*"
         ),
-        message="Get your bids in and make any final adjustments before its too late!",
+        message=(
+            f"Block {block_number} auctions will start closing in {alert_hours} hours. "
+            f"Get your bids in and make your final adjustments before the clock runs "
+            f"out!"
+        ),
         send_at=auctions_start_closing_at - timedelta(hours=alert_hours),
     )
 
@@ -112,7 +119,7 @@ def add_auction_match_notification(nomination, match_time_hours):
         title=":stopwatch:  *An auction has closed and is pending a match!*",
         message=(
             f"<@{nomination.matcher_user.slack_id}> has {match_time_hours} hours to "
-            f"match the highest bid for {nomination.player.name}."
+            f"accept or decline to match the highest bid for {nomination.player.name}."
         ),
         send_at=datetime.utcnow(),
     )
