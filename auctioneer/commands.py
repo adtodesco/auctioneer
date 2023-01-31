@@ -49,12 +49,18 @@ def init_db():
 
     blocks = group_slots_by_block(slots)
     for num, slots in blocks.items():
-        block_opens_at = slots[-1].ends_at - timedelta(days=NOMINATION_DAY_RANGE[1])
-        block_closes_at = slots[0].ends_at - timedelta(days=NOMINATION_DAY_RANGE[0])
+        block_opens_at = (
+            slots[-1].ends_at
+            - timedelta(days=NOMINATION_DAY_RANGE[0])
+            + timedelta(minutes=1)
+        )
+        block_closes_at = slots[0].ends_at - timedelta(days=NOMINATION_DAY_RANGE[1])
         add_nomination_period_begun_notification(
             num, block_opens_at, block_closes_at, MAX_NOMINATIONS_PER_BLOCK
         )
-        add_nomination_period_end_notification(num, block_closes_at, MAX_NOMINATIONS_PER_BLOCK)
+        add_nomination_period_end_notification(
+            num, block_closes_at, MAX_NOMINATIONS_PER_BLOCK
+        )
         add_auctions_close_notification(num, slots[0].ends_at)
 
     db.session.commit()

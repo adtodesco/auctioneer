@@ -8,8 +8,8 @@ from .model import Bid, Nomination, Slot, User
 
 def day_range_to_times(day_range):
     dt_format = "%Y-%m-%d %H:%M:%S"
-    start = datetime.utcnow() + timedelta(days=day_range[0])
-    end = datetime.utcnow() + timedelta(days=day_range[1])
+    start = datetime.utcnow() + timedelta(days=day_range[1])
+    end = datetime.utcnow() + timedelta(days=day_range[0])
     return start.strftime(dt_format), end.strftime(dt_format)
 
 
