@@ -73,10 +73,10 @@ class Nomination(db.Model):
     )
 
     def __repr__(self):
-        return (
-            f"<Nomination {self.player.name} ({self.player.position}, "
-            f"{self.player.team})>"
-        )
+        return f"<Nomination {str(self)}>"
+
+    def __str__(self):
+        return f"{self.player.name} ({self.player.position}, {self.player.team})"
 
 
 class Bid(db.Model):

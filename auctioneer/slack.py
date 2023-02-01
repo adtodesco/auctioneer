@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 
 import pytz
+from flask import current_app
 from slack_sdk import WebhookClient
 
-from auctioneer import db
-from auctioneer.model import Notification
+from . import db
+from .model import Notification
 
 
 def add_nomination_period_begun_notification(
@@ -18,7 +19,7 @@ def add_nomination_period_begun_notification(
             f":incoming_envelope:  *Block {block_number} nomination period has begun!* "
         ),
         message=(
-            f"The block {block_number} nomination period has begun and will last until " 
+            f"The block {block_number} nomination period has begun and will last until "
             f"{block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET. Head to "
             f"http://thedooauction.com to make up to {max_nominations_per_block} "
             f"nominations in this block!"
@@ -86,8 +87,7 @@ def add_player_nominated_notification(nomination):
         title=":mega:  *A player has been nominated!*",
         message=(
             f"<@{nomination.nominator_user.slack_id}> has nominated "
-            f"{nomination.player.name} ({nomination.player.position}, "
-            f"{nomination.player.team }) in block {nomination.slot.block}."
+            f"{str(nomination)}) in block {nomination.slot.block}."
         ),
         send_at=datetime.utcnow(),
     )
@@ -103,7 +103,7 @@ def add_auction_won_notification(nomination):
         title=":moneybag:  *An auction has been won!*",
         message=(
             f"<@{nomination.winner_user.slack_id}> has won the auction for "
-            f"{nomination.player.name} with a bid of ${nomination.bids[0].value}!"
+            f"{str(nomination)} with a bid of ${nomination.bids[0].value}!"
         ),
         send_at=datetime.utcnow(),
     )
@@ -112,22 +112,47 @@ def add_auction_won_notification(nomination):
     db.session.commit()
 
     return notification
+
+
+MATCH_NOTIFICATION_TITLE = (
+    ":stopwatch:  *An auction has closed and is pending a match!*"
+)
 
 
 def add_auction_match_notification(nomination, match_time_hours):
     notification = Notification(
-        title=":stopwatch:  *An auction has closed and is pending a match!*",
+        title=MATCH_NOTIFICATION_TITLE,
         message=(
             f"<@{nomination.matcher_user.slack_id}> has {match_time_hours} hours to "
-            f"accept or decline to match the highest bid for {nomination.player.name}."
+            f"accept or decline to match the highest bid for {str(nomination)}."
         ),
-        send_at=datetime.utcnow(),
+        send_at=nomination.slot.ends_at,
     )
 
     db.session.add(notification)
     db.session.commit()
 
     return notification
+
+
+def remove_auction_match_notification(nomination):
+    notifications = db.session.execute(
+        db.select(Notification)
+        .where(Notification.title.is_(MATCH_NOTIFICATION_TITLE))
+        .where(Notification.message.contains(str(nomination)))
+        .where(Notification.sent.is_(False))
+    )
+    notification_count = 0
+    for notification in notifications.scalars():
+        notification_count += 1
+        db.session.delete(notification)
+
+    db.session.commit()
+    if notification_count > 1:
+        current_app.logger.warning(
+            f"Multiple auction match notifications for nomination {nomination}: "
+            f"{notifications}."
+        )
 
 
 def format_slack_blocks(title, message):
@@ -142,7 +167,7 @@ def send_notification(notification, webhook_url):
     webhook = WebhookClient(webhook_url)
     response = webhook.send(
         text=notification.title,
-        blocks=format_slack_blocks(notification.title, notification.message)
+        blocks=format_slack_blocks(notification.title, notification.message),
     )
     if response.status_code == 200:
         notification.sent = True

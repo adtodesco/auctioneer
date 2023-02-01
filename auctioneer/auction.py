@@ -17,7 +17,12 @@ from . import db
 from .auth import login_required
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
-from .slack import add_auction_won_notification, add_player_nominated_notification
+from .slack import (
+    add_auction_match_notification,
+    add_auction_won_notification,
+    add_player_nominated_notification,
+    remove_auction_match_notification,
+)
 from .utils import (
     close_nomination,
     convert_slots_timezone,
@@ -143,6 +148,8 @@ def nominate():
             )
 
             add_player_nominated_notification(nomination)
+            if matcher_id:
+                add_auction_match_notification(nomination, MATCH_TIME_HOURS)
 
             return redirect(url_for("auction.index"))
 
@@ -182,12 +189,16 @@ def update(id):
         if error is not None:
             flash(error)
         else:
+            if nomination.matcher_id and nomination.matcher_id != matcher_id:
+                remove_auction_match_notification(nomination)
             nomination.slot_id = slot_id
             nomination.matcher_id = matcher_id
             nomination.winner_id = winner_id
             db.session.add(nomination)
             db.session.commit()
             current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
+            if nomination.matcher_id:
+                add_auction_match_notification(nomination, MATCH_TIME_HOURS)
             return redirect(url_for("auction.index"))
 
     users = db.session.execute(db.select(User)).scalars().all()
@@ -289,6 +300,8 @@ def delete(id):
         abort(403)
 
     nomination = db.session.get(Nomination, id)
+    if nomination.matcher_id:
+        remove_auction_match_notification(nomination)
     nomination_str = str(nomination)
     db.session.delete(nomination)
     db.session.commit()
