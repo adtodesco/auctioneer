@@ -1,6 +1,6 @@
 FROM python:3.10-bullseye
 
-RUN apt-get update && apt-get -y install cron
+RUN apt-get update && apt-get -y install cron && apt-get -y install sqlite3
 
 WORKDIR /auctioneer
 
