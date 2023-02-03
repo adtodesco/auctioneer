@@ -11,7 +11,11 @@ db = SQLAlchemy()
 
 def create_app(test_config=None):
     # Configure logging
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+    )
 
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
