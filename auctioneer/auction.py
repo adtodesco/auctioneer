@@ -255,7 +255,7 @@ def bid(id):
             user_bid.value = value
             db.session.add(user_bid)
             db.session.commit()
-            current_app.logger.info(f"Bid {bid} updated by {g.user}.")
+            current_app.logger.info(f"Bid {user_bid} updated by {g.user}.")
             return redirect(url_for("auction.index"))
 
     return render_template("auction/bid.html", nomination=nomination, bid=user_bid)
