@@ -65,7 +65,7 @@ def add_auctions_close_notification(
 ):
     notification = Notification(
         title=(
-            f":rotating_light:  *Block {block_number} auctions closes in {alert_hours} "
+            f":rotating_light:  *Block {block_number} auctions close in {alert_hours} "
             f"hours!*"
         ),
         message=(
