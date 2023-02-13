@@ -97,6 +97,7 @@ class Bid(db.Model):
     def __repr__(self):
         return f"<Bid {self.user.username} for {self.nomination.player.name}>"
 
+
 class Notification(db.Model):
     __tablename__ = "notification"
 

@@ -265,7 +265,7 @@ def bid(id):
 @login_required
 def match(id):
     nomination = db.session.get(Nomination, id)
-    if g.user.id != nomination.nominator_id:
+    if g.user.id != nomination.matcher_id:
         abort(403)
 
     if request.method == "POST":
