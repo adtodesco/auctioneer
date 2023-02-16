@@ -14,6 +14,7 @@ def add_nomination_period_begun_notification(
     block_closes_at = block_closes_at.replace(tzinfo=pytz.utc)
     block_closes_at_et = block_closes_at.astimezone(pytz.timezone("US/Eastern"))
 
+    # TODO: Try removing http:// from website link
     notification = Notification(
         title=(
             f":incoming_envelope:  *Block {block_number} nomination period has begun!* "
@@ -39,6 +40,7 @@ def add_nomination_period_end_notification(
     block_closes_at = block_closes_at.replace(tzinfo=pytz.utc)
     block_closes_at_et = block_closes_at.astimezone(pytz.timezone("US/Eastern"))
 
+    # TODO: Try removing http:// from website link
     notification = Notification(
         title=(
             f":envelope:  *Block {block_number} nomination period ends in {alert_hours}"

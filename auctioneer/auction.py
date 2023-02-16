@@ -317,6 +317,7 @@ def results():
         for row in rows:
             yield ",".join(row) + "\n"
 
+    # TODO: Order by slot.ends_at
     nominations = db.session.execute(
         db.select(Nomination).where(Nomination.winner_id.is_not(None))
     )
