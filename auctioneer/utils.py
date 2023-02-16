@@ -44,10 +44,6 @@ def get_open_slots_for_user(user_id, day_range=None, max_nominations_per_block=N
             .join(Slot)
             .where(Nomination.nominator_id == user_id)
         )
-        if day_range:
-            statement = statement.where(
-                Slot.ends_at.between(*day_range_to_times(day_range))
-            )
         statement = statement.group_by(Slot.block)
 
         user_nominations = db.session.execute(statement)
