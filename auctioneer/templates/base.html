@@ -1,5 +1,6 @@
 <!doctype html>
 <html style="background-image: url({{ url_for('static', filename='thedoologo.png') }});background-size: 20%;">
+
 <head>
     {% block head %}
     <title>The DOO Auction - {% block title %}{% endblock %}</title>
@@ -10,9 +11,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <script>
-      $(function(){
-        $("select").select2();
-      });
+        $(function () {
+            $("select").select2();
+        });
     </script>
     {% endblock %}
 </head>
@@ -20,17 +21,17 @@
     <h1><a href="{{ url_for('auction.index') }}">The DOO Auction</a></h1>
     <div>
         <ul>
-            <li><a class="action" href="{{ url_for('auction.index') }}">Auctions</a></li>
+            <li><a class="action" href="{{ url_for('auction.index') }}">Nominations</a></li>
             <li><a class="action" href="{{ url_for('tiebreaker.index') }}">Tiebreaker Order</a></li>
         </ul>
         <ul>
             {% if g.user %}
             <li><span>{{ g.user['username'] }}</span>
             <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
-            {% else %}
+                {% else %}
             <li><a href="{{ url_for('auth.register') }}">Register</a>
             <li><a href="{{ url_for('auth.login') }}">Log In</a>
-            {% endif %}
+                {% endif %}
         </ul>
     </div>
 </nav>
@@ -43,4 +44,5 @@
     {% endfor %}
     {% block content %}{% endblock %}
 </section>
+
 </html>
