@@ -128,7 +128,7 @@ def add_auction_match_notification(nomination, match_time_hours):
             f"<@{nomination.matcher_user.slack_id}> has {match_time_hours} hours to "
             f"accept or decline to match the highest bid for {str(nomination)}."
         ),
-        send_at=nomination.slot.ends_at,
+        send_at=nomination.slot.closes_at,
     )
 
     db.session.add(notification)

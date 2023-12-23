@@ -6,15 +6,15 @@
 
 {% block content %}
 <form method="post">
-    <label for="value">Enter bid below. Your bid will become the players total salary if you win this player's auction.</label>
-    <input name="value" id="value" value="{{ request.form['value'] or bid.value }}"
-           required>
+    <label for="value">Enter bid below. Your bid will become the players total salary if you win this player's
+        auction.</label>
+    <input name="value" id="value" value="{{ request.form['value'] or bid.value }}" required>
     <input type="submit" value="Save">
 </form>
 <hr>
 {% if g.user.id != nomination.nominator_id %}
 <form method="post">
-    <input type="hidden" name="value" value=""/>
+    <input type="hidden" name="value" value="" />
     <input class="danger" type="submit" value="Reset">
 </form>
 {% endif %}

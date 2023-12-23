@@ -8,10 +8,9 @@ from flask import (
     request,
     url_for,
 )
-from werkzeug.exceptions import abort
 
 from . import db
-from .auth import login_required
+from .auth import login_required, admin_required
 from .model import User
 
 bp = Blueprint("tiebreaker", __name__, url_prefix="/tiebreaker")
@@ -19,25 +18,17 @@ bp = Blueprint("tiebreaker", __name__, url_prefix="/tiebreaker")
 
 @bp.route("/")
 def index():
-    users = (
-        db.session.execute(db.select(User).order_by(User.tiebreaker_order))
-        .scalars()
-        .all()
-    )
+    query = db.select(User).order_by(User.tiebreaker_order)
+    users = db.session.execute(query).scalars().all()
     return render_template("tiebreaker/index.html", users=users)
 
 
 @bp.route("/edit", methods=("GET", "POST"))
 @login_required
+@admin_required
 def edit():
-    if not g.user.is_league_manager:
-        abort(403)
-
-    users = (
-        db.session.execute(db.select(User).order_by(User.tiebreaker_order))
-        .scalars()
-        .all()
-    )
+    query = db.select(User).order_by(User.tiebreaker_order)
+    users = db.session.execute(query).scalars().all()
 
     if request.method == "POST":
         error = None
@@ -78,3 +69,31 @@ def edit():
         flash(error)
 
     return render_template("tiebreaker/edit.html", users=users)
+
+
+def drop_to_tiebreaker_bottom(winning_user):
+    users = db.session.execute(db.select(User)).scalars().all()
+
+    updates = dict()
+    max_tiebreaker_order = 0
+    for user in users:
+        if (
+            user.tiebreaker_order is not None
+            and user.tiebreaker_order > winning_user.tiebreaker_order
+        ):
+            if user.tiebreaker_order > max_tiebreaker_order:
+                max_tiebreaker_order = user.tiebreaker_order
+            updates[user.id] = user.tiebreaker_order - 1
+            user.tiebreaker_order = None
+
+    if updates:
+        updates[winning_user.id] = max_tiebreaker_order
+        winning_user.tiebreaker_order = None
+
+        db.session.add_all(users)
+        db.session.flush()
+        for user_id, tiebreaker_order in updates.items():
+            user = db.session.get(User, user_id)
+            user.tiebreaker_order = tiebreaker_order
+            db.session.add(user)
+        db.session.commit()

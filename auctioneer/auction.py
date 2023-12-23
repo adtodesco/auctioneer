@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 
 from flask import (
     Blueprint,
@@ -13,8 +14,11 @@ from flask import (
 )
 from werkzeug.exceptions import abort
 
+from auctioneer.tiebreaker import drop_to_tiebreaker_bottom
+
+
 from . import db
-from .auth import login_required
+from .auth import login_required, admin_required
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
 from .slack import (
@@ -24,8 +28,6 @@ from .slack import (
     remove_auction_match_notification,
 )
 from .utils import (
-    close_nomination,
-    convert_slots_timezone,
     get_open_slots,
     get_open_slots_for_user,
     get_user_bid_for_nomination,
@@ -53,7 +55,7 @@ def index():
     closed_nominations = list()
 
     for row in result:
-        if row.Nomination.slot.ends_at < datetime.utcnow():
+        if row.Nomination.slot.closes_at < datetime.utcnow():
             if row.Nomination.winner_id:
                 closed_nominations.append(row)
             elif row.Nomination.matcher_id:
@@ -64,7 +66,7 @@ def index():
             open_nominations.append(row)
 
     def sort_key(n):
-        return n.Nomination.slot.ends_at
+        return n.Nomination.slot.closes_at
 
     open_nominations = sorted(open_nominations, key=sort_key, reverse=True)
     match_nominations = sorted(match_nominations, key=sort_key, reverse=True)
@@ -90,7 +92,7 @@ def nominate():
     )
     players = db.session.execute(statement).scalars().all()
     if not players:
-        flash(f"No available players remaining.")
+        flash("No available players remaining.")
 
     slots = get_open_slots_for_user(
         g.user.id,
@@ -166,60 +168,6 @@ def nominate():
     )
 
 
-@bp.route("/<int:id>/update", methods=("GET", "POST"))
-@login_required
-def update(id):
-    if not g.user.is_league_manager:
-        abort(403)
-
-    nomination = db.session.get(Nomination, id)
-    if nomination is None:
-        abort(404, f"Nomination for id {id} doesn't exist.")
-
-    if request.method == "POST":
-        slot_id = request.form["slot_id"]
-        matcher_id = request.form["matcher_id"] or None
-        winner_id = request.form["winner_id"] or None
-
-        error = None
-
-        if not slot_id:
-            error = "Ends at date time is required."
-
-        if error is not None:
-            flash(error)
-        else:
-            if nomination.matcher_id and nomination.matcher_id != matcher_id:
-                remove_auction_match_notification(nomination)
-            nomination.slot_id = slot_id
-            nomination.matcher_id = matcher_id
-            nomination.winner_id = winner_id
-            db.session.add(nomination)
-            db.session.commit()
-            current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
-            if nomination.matcher_id:
-                add_auction_match_notification(nomination, MATCH_TIME_HOURS)
-            return redirect(url_for("auction.index"))
-
-    users = db.session.execute(db.select(User)).scalars().all()
-    slots = get_open_slots().scalars().all()
-    current_slot = db.session.get(Slot, nomination.slot_id)
-    slots.append(current_slot)
-    blocks = group_slots_by_block(slots)
-
-    for slots in blocks.values():
-        convert_slots_timezone(slots)
-
-    return render_template(
-        "auction/update.html",
-        nomination=nomination,
-        positions=POSITIONS,
-        teams=TEAMS,
-        users=users,
-        blocks=blocks,
-    )
-
-
 @bp.route("/<int:id>/bid", methods=("GET", "POST"))
 @login_required
 def bid(id):
@@ -231,7 +179,7 @@ def bid(id):
     if not user_bid.value:
         user_bid.value = ""
 
-    if datetime.utcnow() > nomination.slot.ends_at:
+    if datetime.utcnow() > nomination.slot.closes_at:
         flash("Auction has closed.")
     elif request.method == "POST":
         value = request.form["value"] or None
@@ -293,12 +241,62 @@ def match(id):
     return render_template("auction/match.html", nomination=nomination, bid=bid)
 
 
+@bp.route("/<int:id>/edit", methods=("GET", "POST"))
+@login_required
+@admin_required
+def edit(id):
+    nomination = db.session.get(Nomination, id)
+    if nomination is None:
+        abort(404, f"Nomination for id {id} doesn't exist.")
+
+    if request.method == "POST":
+        slot_id = request.form["slot_id"]
+        matcher_id = request.form["matcher_id"] or None
+        winner_id = request.form["winner_id"] or None
+
+        error = None
+
+        if not slot_id:
+            error = "Ends at date time is required."
+
+        if error is not None:
+            flash(error)
+        else:
+            if nomination.matcher_id and nomination.matcher_id != matcher_id:
+                remove_auction_match_notification(nomination)
+            nomination.slot_id = slot_id
+            nomination.matcher_id = matcher_id
+            nomination.winner_id = winner_id
+            db.session.add(nomination)
+            db.session.commit()
+            current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
+            if nomination.matcher_id:
+                add_auction_match_notification(nomination, MATCH_TIME_HOURS)
+            return redirect(url_for("auction.index"))
+
+    users = db.session.execute(db.select(User)).scalars().all()
+    slots = get_open_slots().scalars().all()
+    current_slot = db.session.get(Slot, nomination.slot_id)
+    slots.append(current_slot)
+    blocks = group_slots_by_block(slots)
+
+    for slots in blocks.values():
+        convert_slots_timezone(slots)
+
+    return render_template(
+        "auction/edit.html",
+        nomination=nomination,
+        positions=POSITIONS,
+        teams=TEAMS,
+        users=users,
+        blocks=blocks,
+    )
+
+
 @bp.route("/<int:id>/delete", methods=("POST",))
 @login_required
+@admin_required
 def delete(id):
-    if not g.user.is_league_manager:
-        abort(403)
-
     nomination = db.session.get(Nomination, id)
     if nomination.matcher_id:
         remove_auction_match_notification(nomination)
@@ -317,7 +315,7 @@ def results():
         for row in rows:
             yield ",".join(row) + "\n"
 
-    # TODO: Order by slot.ends_at
+    # TODO: Order by slot.closes_at
     nominations = db.session.execute(
         db.select(Nomination).where(Nomination.winner_id.is_not(None))
     )
@@ -339,3 +337,36 @@ def results():
         generate(results_headers, results_rows),
         mimetype="text/csv",
     )
+
+
+def close_nomination(nomination):
+    winning_bid_value = nomination.bids[0].value
+    winning_users = list()
+    for bid in nomination.bids:
+        if bid.value == winning_bid_value:
+            winning_users.append(bid.user)
+
+    if len(winning_users) > 1:
+        winning_user = winning_users[0]
+        for user in winning_users[1:]:
+            if (
+                user.tiebreaker_order is not None
+                and user.tiebreaker_order < winning_user.tiebreaker_order
+            ):
+                winning_user = user
+        drop_to_tiebreaker_bottom(winning_user)
+    else:
+        winning_user = winning_users[0]
+
+    nomination.winner_id = winning_user.id
+    db.session.add(nomination)
+    db.session.commit()
+
+
+def convert_slots_timezone(slots, timezone="US/Eastern"):
+    for slot in slots:
+        slot.closes_at = slot.closes_at.replace(tzinfo=pytz.utc).astimezone(
+            pytz.timezone(timezone)
+        )
+
+    return slots

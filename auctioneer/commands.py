@@ -5,7 +5,7 @@ import click
 from flask import current_app
 
 from . import db
-from .auction import MAX_NOMINATIONS_PER_BLOCK, NOMINATION_DAY_RANGE
+from .auction import MAX_NOMINATIONS_PER_BLOCK, NOMINATION_DAY_RANGE, close_nomination
 from .model import Nomination, Notification, Slot
 from .slack import (
     add_auction_won_notification,
@@ -14,7 +14,7 @@ from .slack import (
     add_nomination_period_end_notification,
     send_notification,
 )
-from .utils import close_nomination, group_slots_by_block
+from .utils import group_slots_by_block
 
 
 def init_db():
@@ -42,7 +42,7 @@ def init_db():
         )
 
     slots = [
-        Slot(block=slot[0], ends_at=datetime.strptime(slot[1], "%Y-%m-%d %H:%M:%S"))
+        Slot(block=slot[0], closes_at=datetime.strptime(slot[1], "%Y-%m-%d %H:%M:%S"))
         for slot in slot_lines
     ]
     db.session.add_all(slots)
@@ -50,18 +50,18 @@ def init_db():
     blocks = group_slots_by_block(slots)
     for num, slots in blocks.items():
         block_opens_at = (
-            slots[-1].ends_at
+            slots[-1].closes_at
             - timedelta(days=NOMINATION_DAY_RANGE[0])
             + timedelta(minutes=1)
         )
-        block_closes_at = slots[0].ends_at - timedelta(days=NOMINATION_DAY_RANGE[1])
+        block_closes_at = slots[0].closes_at - timedelta(days=NOMINATION_DAY_RANGE[1])
         add_nomination_period_begun_notification(
             num, block_opens_at, block_closes_at, MAX_NOMINATIONS_PER_BLOCK
         )
         add_nomination_period_end_notification(
             num, block_closes_at, MAX_NOMINATIONS_PER_BLOCK
         )
-        add_auctions_close_notification(num, slots[0].ends_at)
+        add_auctions_close_notification(num, slots[0].closes_at)
 
     db.session.commit()
 
@@ -81,8 +81,8 @@ def close_nominations():
         .join(Slot)
         .where(Nomination.winner_id.is_(None))
         .where(
-            (Nomination.matcher_id.is_(None) & (current_datetime > Slot.ends_at))
-            | (Nomination.matcher_id.is_not(None) & (match_datetime > Slot.ends_at))
+            (Nomination.matcher_id.is_(None) & (current_datetime > Slot.closes_at))
+            | (Nomination.matcher_id.is_not(None) & (match_datetime > Slot.closes_at))
         )
     )
     nominations = db.session.execute(statement).scalars().all()

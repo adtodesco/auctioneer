@@ -19,7 +19,7 @@
         {% for num, slots in blocks.items() %}
         <optgroup label="Block {{ num }}">
             {% for slot in slots %}
-            <option value="{{ slot.id }}">{{ slot.ends_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
+            <option value="{{ slot.id }}">{{ slot.closes_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
             {% endfor %}
         </optgroup>
         {% endfor %}
@@ -31,9 +31,9 @@
         <option value="{{ user.id }}">{{ user.username }}</option>
         {% endfor %}
     </select>
-    <label for="bid_value">Enter bid below. Your bid will become the players total salary if you win this player's auction.</label>
-    <input name="bid_value" id="bid_value" value="{{ request.form['bid_value'] }}"
-           required>
+    <label for="bid_value">Enter bid below. Your bid will become the players total salary if you win this player's
+        auction.</label>
+    <input name="bid_value" id="bid_value" value="{{ request.form['bid_value'] }}" required>
     <input type="submit" value="Save">
 </form>
 {% endblock %}

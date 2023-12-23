@@ -24,8 +24,11 @@ class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fantrax_id = db.Column(db.String, index=True, nullable=False, unique=True)
     name = db.Column(db.String, nullable=False)
-    position = db.Column(db.String, nullable=False)
     team = db.Column(db.String, nullable=False)
+    position = db.Column(db.String, nullable=False)
+    status = db.Column(db.String, nullable=False)
+    salary = db.Column(db.Integer, default=None)
+    contract = db.Column(db.Integer, default=None)
 
     # One-to-one relationships
     nomination = db.relationship("Nomination", back_populates="player")
@@ -36,7 +39,7 @@ class Slot(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     block = db.Column(db.Integer)
-    ends_at = db.Column(db.DateTime, nullable=False)
+    closes_at = db.Column(db.DateTime, nullable=False)
 
     # One-to-one relationships
     nomination = db.relationship("Nomination", back_populates="slot")

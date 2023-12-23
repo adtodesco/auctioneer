@@ -11,6 +11,7 @@ from flask import (
     url_for,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.exceptions import abort
 
 from . import db
 from .model import Bid, Nomination, User
@@ -109,6 +110,17 @@ def login_required(view):
     def wrapped_view(**kwargs):
         if g.user is None:
             return redirect(url_for("auth.login"))
+
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+def admin_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if not g.user.is_league_manager:
+            abort(403)
 
         return view(**kwargs)
 

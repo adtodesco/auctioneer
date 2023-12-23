@@ -26,7 +26,7 @@
 
     <div>
         <p class="status">Auction <strong>OPEN</strong> until: {{
-            moment(nomination.Nomination.slot.ends_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]
+            moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]
         </p>
         {% if nomination.Nomination.matcher_id %}
         <p class="match">Match rights: <strong>{{ nomination.Nomination.matcher_user.username }}</strong></p>
@@ -62,7 +62,7 @@
 
     <div>
         <p class="status">Auction <strong>CLOSED</strong> on: {{
-            moment(nomination.Nomination.slot.ends_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]
+            moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]
         </p>
         {% if nomination.Nomination.matcher_id %}
         <p class="match"><strong>{{ nomination.Nomination.matcher_user.username }}</strong> has 24 hours to match!</p>
@@ -98,7 +98,7 @@
 
     <div>
         <p class="status">Auction <strong>CLOSED</strong> on: {{
-            moment(nomination.Nomination.slot.ends_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]
+            moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Block {{ nomination.Nomination.slot.block }}]
         </p>
     </div>
     <br>

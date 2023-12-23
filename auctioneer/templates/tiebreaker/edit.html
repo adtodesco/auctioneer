@@ -8,10 +8,8 @@
 <form method="post">
     {% for user in users %}
     <label for="user_{{ user.id }}_tiebreaker_order">{{ user.username }}</label>
-    <input name="user_{{ user.id }}_tiebreaker_order"
-           id="user_{{ user.id }}_tiebreaker_order"
-           value="{{ request.form['user_{{ user.id }}_tiebreaker_order'] or user.tiebreaker_order }}"
-           required>
+    <input name="user_{{ user.id }}_tiebreaker_order" id="user_{{ user.id }}_tiebreaker_order"
+        value="{{ request.form['user_{{ user.id }}_tiebreaker_order'] or user.tiebreaker_order }}" required>
     {% endfor %}
     <input type="submit" value="Save">
 </form>

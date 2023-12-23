@@ -13,9 +13,9 @@
         <optgroup label="Block {{ num }}">
             {% for slot in slots %}
             {% if slot.id == nomination.slot_id %}
-            <option value="{{ slot.id }}" selected>{{ slot.ends_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
+            <option value="{{ slot.id }}" selected>{{ slot.closes_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
             {% else %}
-            <option value="{{ slot.id }}">{{ slot.ends_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
+            <option value="{{ slot.id }}">{{ slot.closes_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
             {% endif %}
             {% endfor %}
         </optgroup>
@@ -55,7 +55,6 @@
 </form>
 <hr>
 <form action="{{ url_for('auction.delete', id=nomination.id) }}" method="post">
-    <input class="danger" type="submit" value="Delete"
-           onclick="return confirm('Are you sure?');">
+    <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
 </form>
 {% endblock %}
