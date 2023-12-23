@@ -2,6 +2,7 @@ version: "3.8"
 
 services:
   web:
+    image: auctioneer
     build: .
     ports:
       - "127.0.0.1:8000:8000"
