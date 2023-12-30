@@ -1,8 +1,8 @@
+import csv
 from datetime import datetime, timedelta
 
-
 from . import db
-from .model import Bid, Nomination, Slot
+from .model import Bid, Nomination, Player, Slot
 
 
 def day_range_to_times(day_range):
@@ -72,3 +72,30 @@ def group_slots_by_block(slots):
         blocks[block] = sorted(blocks[block], key=lambda b: b.closes_at)
 
     return blocks
+
+
+def players_from_fantrax_export(file):
+    with open(file) as f:
+        reader = csv.DictReader(f)
+        players = list()
+        for player in reader:
+            if player["Status"] == "FA":
+                salary = None
+                contract = None
+            else:
+                salary = int(float(player["Salary"]))
+                contract = int(player["Contract"])
+
+            players.append(
+                Player(
+                    fantrax_id=player["ID"],
+                    name=player["Player"],
+                    team=player["Team"],
+                    position=player["Position"],
+                    status=player["Status"],
+                    salary=salary,
+                    contract=contract,
+                )
+            )
+
+    return players

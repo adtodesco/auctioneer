@@ -5,63 +5,23 @@ import click
 from flask import current_app
 
 from . import db
-from .auction import MAX_NOMINATIONS_PER_BLOCK, NOMINATION_DAY_RANGE, close_nomination
+from .auction import assign_nominated_player_to_team, close_nomination
 from .model import Nomination, Notification, Slot
-from .slack import (
-    add_auction_won_notification,
-    add_auctions_close_notification,
-    add_nomination_period_begun_notification,
-    add_nomination_period_end_notification,
-    send_notification,
-)
-from .utils import group_slots_by_block
+from .slack import add_auction_won_notification, send_notification
+from .utils import players_from_fantrax_export
 
 
 def init_db():
-    from .model import Bid, Nomination, Notification, Player, Slot, User
+    # All models need to be imported before setting up the database
+    from .model import Bid, Nomination, Notification, Player, Slot, User  # noqa: F401
 
     with current_app.app_context():
         db.drop_all()
         db.create_all()
 
-    with current_app.open_resource("data/players.csv") as f:
-        player_lines = list(
-            s.decode("utf-8").strip("\n").replace('"', "").split(",")
-            for s in f.readlines()
-        )
-
-    players = [
-        Player(fantrax_id=player[0], name=player[1], team=player[2], position=player[3])
-        for player in player_lines
-    ]
+    players_file = os.path.join(current_app.root_path, "data", "players.csv")
+    players = players_from_fantrax_export(players_file)
     db.session.add_all(players)
-
-    with current_app.open_resource("data/slots.csv") as f:
-        slot_lines = list(
-            s.decode("utf-8").strip("\n").split(",") for s in f.readlines()
-        )
-
-    slots = [
-        Slot(block=slot[0], closes_at=datetime.strptime(slot[1], "%Y-%m-%d %H:%M:%S"))
-        for slot in slot_lines
-    ]
-    db.session.add_all(slots)
-
-    blocks = group_slots_by_block(slots)
-    for num, slots in blocks.items():
-        block_opens_at = (
-            slots[-1].closes_at
-            - timedelta(days=NOMINATION_DAY_RANGE[0])
-            + timedelta(minutes=1)
-        )
-        block_closes_at = slots[0].closes_at - timedelta(days=NOMINATION_DAY_RANGE[1])
-        add_nomination_period_begun_notification(
-            num, block_opens_at, block_closes_at, MAX_NOMINATIONS_PER_BLOCK
-        )
-        add_nomination_period_end_notification(
-            num, block_closes_at, MAX_NOMINATIONS_PER_BLOCK
-        )
-        add_auctions_close_notification(num, slots[0].closes_at)
 
     db.session.commit()
 
@@ -88,6 +48,7 @@ def close_nominations():
     nominations = db.session.execute(statement).scalars().all()
     for nomination in nominations:
         close_nomination(nomination)
+        assign_nominated_player_to_team(nomination)
         add_auction_won_notification(nomination)
 
     return nominations

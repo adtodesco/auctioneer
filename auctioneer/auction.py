@@ -1,6 +1,7 @@
+import math
 from datetime import datetime
-import pytz
 
+import pytz
 from flask import (
     Blueprint,
     Response,
@@ -16,9 +17,8 @@ from werkzeug.exceptions import abort
 
 from auctioneer.tiebreaker import drop_to_tiebreaker_bottom
 
-
 from . import db
-from .auth import login_required, admin_required
+from .auth import admin_required, login_required
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
 from .slack import (
@@ -36,10 +36,23 @@ from .utils import (
 
 bp = Blueprint("auction", __name__)
 
-MINIMUM_BID_VALUE = 10
+# TODO: Add this to a configuration page
+MINIMUM_BID_VALUE = 11
 MAX_NOMINATIONS_PER_BLOCK = 3
 MATCH_TIME_HOURS = 24
 NOMINATION_DAY_RANGE = (7, 4)
+MINIMUM_TOTAL_SALARY = {
+    2024: 11,
+    2025: 28,
+    2026: 54,
+    2027: 96,
+    2028: 155,
+    2029: 240,
+    2030: 364,
+    2031: 544,
+    2032: 792,
+    2033: 1150,
+}
 
 
 @bp.route("/")
@@ -55,13 +68,13 @@ def index():
     closed_nominations = list()
 
     for row in result:
-        if row.Nomination.slot.closes_at < datetime.utcnow():
-            if row.Nomination.winner_id:
-                closed_nominations.append(row)
-            elif row.Nomination.matcher_id:
-                match_nominations.append(row)
-            else:
-                open_nominations.append(row)
+        if row.Nomination.winner_id:
+            closed_nominations.append(row)
+        elif (
+            row.Nomination.slot.closes_at < datetime.utcnow()
+            and row.Nomination.matcher_id
+        ):
+            match_nominations.append(row)
         else:
             open_nominations.append(row)
 
@@ -80,13 +93,14 @@ def index():
     )
 
 
-@bp.route("/nominate", methods=("GET", "POST"))
+@bp.route("/nominate/", methods=["GET", "POST"])
 @login_required
 def nominate():
     users = db.session.execute(db.select(User)).scalars().all()
 
     statement = (
         db.select(Player)
+        .where(Player.status == "FA")
         .where(~db.exists().where(Nomination.player_id == Player.id))
         .order_by(Player.name)
     )
@@ -100,7 +114,7 @@ def nominate():
         max_nominations_per_block=MAX_NOMINATIONS_PER_BLOCK,
     )
     if not slots:
-        flash(f"No nomination slots currently available for {g.user.username}.")
+        flash("No nomination slots currently available.")
 
     blocks = group_slots_by_block(slots)
 
@@ -115,7 +129,7 @@ def nominate():
         if not player_id:
             error = "Player is required."
         elif not slot_id:
-            error = "Ends at date time is required."
+            error = "Auction closes at date & time is required."
         elif not bid_value:
             error = "Bid value is required."
 
@@ -156,7 +170,7 @@ def nominate():
             return redirect(url_for("auction.index"))
 
     for slots in blocks.values():
-        convert_slots_timezone(slots)
+        convert_slots_timezone(slots, "UTC", "US/Eastern")
 
     return render_template(
         "auction/nominate.html",
@@ -168,12 +182,12 @@ def nominate():
     )
 
 
-@bp.route("/<int:id>/bid", methods=("GET", "POST"))
+@bp.route("/<int:nomination_id>/bid/", methods=["GET", "POST"])
 @login_required
-def bid(id):
-    nomination = db.session.get(Nomination, id)
+def bid(nomination_id):
+    nomination = db.session.get(Nomination, nomination_id)
     if nomination is None:
-        abort(404, f"Nomination for id {id} doesn't exist.")
+        abort(404, f"Nomination for id {nomination_id} doesn't exist.")
 
     user_bid = get_user_bid_for_nomination(g.user.id, nomination.id)
     if not user_bid.value:
@@ -183,6 +197,10 @@ def bid(id):
         flash("Auction has closed.")
     elif request.method == "POST":
         value = request.form["value"] or None
+        action = request.form["action"]
+
+        if action.lower() == "reset":
+            value = None
 
         error = None
 
@@ -209,10 +227,10 @@ def bid(id):
     return render_template("auction/bid.html", nomination=nomination, bid=user_bid)
 
 
-@bp.route("/<int:id>/match", methods=("GET", "POST"))
+@bp.route("/<int:nomination_id>/match/", methods=["GET", "POST"])
 @login_required
-def match(id):
-    nomination = db.session.get(Nomination, id)
+def match(nomination_id):
+    nomination = db.session.get(Nomination, nomination_id)
     if g.user.id != nomination.matcher_id:
         abort(403)
 
@@ -241,38 +259,53 @@ def match(id):
     return render_template("auction/match.html", nomination=nomination, bid=bid)
 
 
-@bp.route("/<int:id>/edit", methods=("GET", "POST"))
+@bp.route("/<int:nomination_id>/edit/", methods=["GET", "POST"])
 @login_required
 @admin_required
-def edit(id):
-    nomination = db.session.get(Nomination, id)
+def edit(nomination_id):
+    nomination = db.session.get(Nomination, nomination_id)
     if nomination is None:
-        abort(404, f"Nomination for id {id} doesn't exist.")
+        abort(404, f"Nomination for id {nomination_id} doesn't exist.")
 
     if request.method == "POST":
         slot_id = request.form["slot_id"]
         matcher_id = request.form["matcher_id"] or None
         winner_id = request.form["winner_id"] or None
+        action = request.form["action"]
 
-        error = None
-
-        if not slot_id:
-            error = "Ends at date time is required."
-
-        if error is not None:
-            flash(error)
-        else:
-            if nomination.matcher_id and nomination.matcher_id != matcher_id:
-                remove_auction_match_notification(nomination)
-            nomination.slot_id = slot_id
-            nomination.matcher_id = matcher_id
-            nomination.winner_id = winner_id
-            db.session.add(nomination)
-            db.session.commit()
-            current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
+        if action.lower() == "delete":
             if nomination.matcher_id:
-                add_auction_match_notification(nomination, MATCH_TIME_HOURS)
+                remove_auction_match_notification(nomination)
+            if nomination.winner_id:
+                unassign_nominated_player_to_team(nomination)
+            nomination_str = str(nomination)
+            db.session.delete(nomination)
+            db.session.commit()
+            current_app.logger.info(f"Nomination {nomination_str} deleted by {g.user}.")
             return redirect(url_for("auction.index"))
+        else:
+            error = None
+            if not slot_id:
+                error = "Auction closes at date & time is required."
+
+            if error:
+                flash(error)
+            else:
+                if nomination.matcher_id and nomination.matcher_id != matcher_id:
+                    remove_auction_match_notification(nomination)
+                if nomination.winner_id and nomination.winner_id != winner_id:
+                    unassign_nominated_player_to_team(nomination)
+                nomination.slot_id = slot_id
+                nomination.matcher_id = matcher_id
+                nomination.winner_id = winner_id
+                db.session.add(nomination)
+                db.session.commit()
+                current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
+                if nomination.matcher_id:
+                    add_auction_match_notification(nomination, MATCH_TIME_HOURS)
+                if nomination.winner_id:
+                    assign_nominated_player_to_team(nomination)
+                return redirect(url_for("auction.index"))
 
     users = db.session.execute(db.select(User)).scalars().all()
     slots = get_open_slots().scalars().all()
@@ -281,7 +314,7 @@ def edit(id):
     blocks = group_slots_by_block(slots)
 
     for slots in blocks.values():
-        convert_slots_timezone(slots)
+        convert_slots_timezone(slots, "UTC", "US/Eastern")
 
     return render_template(
         "auction/edit.html",
@@ -293,21 +326,56 @@ def edit(id):
     )
 
 
-@bp.route("/<int:id>/delete", methods=("POST",))
+@bp.route("/<int:player_id>/sign/", methods=["GET", "POST"])
 @login_required
-@admin_required
-def delete(id):
-    nomination = db.session.get(Nomination, id)
-    if nomination.matcher_id:
-        remove_auction_match_notification(nomination)
-    nomination_str = str(nomination)
-    db.session.delete(nomination)
-    db.session.commit()
-    current_app.logger.info(f"Nomination {nomination_str} deleted by {g.user}.")
-    return redirect(url_for("auction.index"))
+def sign(player_id):
+    player = db.session.get(Player, player_id)
+    if player is None:
+        abort(404, f"Player for id {player_id} doesn't exist.")
+
+    # Not sure why player.nomination returns a list, but it should always be len 1 so
+    # this should be fine.
+    user_bid = get_user_bid_for_nomination(g.user.id, player.nomination[0].id)
+    last_year = list(MINIMUM_TOTAL_SALARY)[0] - 1
+    options = dict()
+    for year, salary in MINIMUM_TOTAL_SALARY.items():
+        if user_bid.value >= salary:
+            options[year] = math.ceil(user_bid.value / (year - last_year))
+
+    if request.method == "POST":
+        contract = request.form["contract"] or None
+        action = request.form["action"]
+
+        if action.lower() == "reset":
+            contract = None
+
+        error = None
+
+        try:
+            contract = int(contract)
+        except ValueError:
+            error = "Contract must be an integer."
+
+        if contract not in options:
+            error = "Invalid contract option."
+
+        if error is not None:
+            flash(error)
+        else:
+            player.contract = contract
+            player.salary = options[contract]
+            db.session.add(player)
+            db.session.commit()
+            current_app.logger.info(
+                f"Player contract set to {contract} with salary {options[contract]} by "
+                f"{g.user}."
+            )
+            return redirect(url_for("rosters.index"))
+
+    return render_template("auction/sign.html", player=player, options=options)
 
 
-@bp.route("/results")
+@bp.route("/results/")
 @login_required
 def results():
     def generate(headers, rows):
@@ -319,14 +387,25 @@ def results():
     nominations = db.session.execute(
         db.select(Nomination).where(Nomination.winner_id.is_not(None))
     )
-    results_headers = ["Fantrax ID", "Player", "Position", "Team", "Winner", "Bids"]
+    results_headers = [
+        "Fantrax ID",
+        "Player",
+        "Team",
+        "Position",
+        "Winner",
+        "Salary",
+        "Contract",
+        "Bids",
+    ]
     results_rows = [
         [
             nomination.player.fantrax_id,
             nomination.player.name,
-            nomination.player.position,
             nomination.player.team,
+            nomination.player.position.replace(",", ";"),
             nomination.winner_user.username,
+            str(nomination.player.salary),
+            str(nomination.player.contract),
             ";".join([str(b.value) for b in nomination.bids]),
         ]
         for nomination in nominations.scalars()
@@ -336,6 +415,9 @@ def results():
     return Response(
         generate(results_headers, results_rows),
         mimetype="text/csv",
+        headers={
+            "Content-Disposition": 'attachment; filename="the-doo-auction-results.csv"'
+        },
     )
 
 
@@ -363,10 +445,26 @@ def close_nomination(nomination):
     db.session.commit()
 
 
-def convert_slots_timezone(slots, timezone="US/Eastern"):
+def assign_nominated_player_to_team(nomination):
+    nomination.player.status = nomination.winner_user.team
+    db.session.add(nomination)
+    db.session.commit()
+
+
+def unassign_nominated_player_to_team(nomination):
+    nomination.player.status = "FA"
+    nomination.player.contract = None
+    nomination.player.salary = None
+    db.session.add(nomination)
+    db.session.commit()
+
+
+def convert_slots_timezone(slots, from_tz, to_tz):
     for slot in slots:
-        slot.closes_at = slot.closes_at.replace(tzinfo=pytz.utc).astimezone(
-            pytz.timezone(timezone)
+        slot.closes_at = (
+            pytz.timezone(from_tz)
+            .localize(slot.closes_at)
+            .astimezone(pytz.timezone(to_tz))
         )
 
     return slots

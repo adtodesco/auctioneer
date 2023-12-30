@@ -10,7 +10,7 @@ from flask import (
 )
 
 from . import db
-from .auth import login_required, admin_required
+from .auth import admin_required, login_required
 from .model import User
 
 bp = Blueprint("tiebreaker", __name__, url_prefix="/tiebreaker")

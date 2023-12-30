@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Rosters{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+<div class="teams">
+    {% if teams[0] == selected_team.upper() %}
+    <b>{{ teams[0] }}</b>
+    {% else %}
+    <a class="action" href="{{ url_for('rosters.roster', team=teams[0].lower()) }}">{{ teams[0] }}</a>
+    {% endif %}
+    {% for team in teams[1:] %}
+    {% if team == selected_team.upper() %}
+    | <b>{{ team }}</b>
+    {% else %}
+    | <a class="action" href="{{ url_for('rosters.roster', team=team.lower()) }}">{{ team }}</a>
+    {% endif %}
+    {% endfor %}
+</div>
+<div class="roster">
+    <div class="players">
+        {% if players %}
+        <table>
+            <tr>
+                <th>Player</th>
+                <th>Team</th>
+                <th>Position</th>
+                <th>Salary</th>
+                <th>Contract</th>
+                <th></th>
+            </tr>
+            {% for player in players %}
+
+            <tr {% if player.nomination %} class="signed" {% endif %}>
+                <td>{{ player["name"] }}</td>
+                <td>{{ player["team"] }}</td>
+                <td>{{ player["position"] }}</td>
+                <td class="number">{% if player.salary %}${{ player["salary"] }}{% else %}--{% endif %}</td>
+                <td class="number">{% if player.contract %}{{ player["contract"] }}{% else %}--{% endif %}</td>
+                <td>{% if player.nomination and player.nomination[0].winner_user == g.user %}<a class="action"
+                        href="{{ url_for('auction.sign', player_id=player.id) }}">Sign</a>{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No players on team <b>{{ selected_team }}</b> - this team may not exist.</p>
+        {% endif %}
+    </div>
+    <div class="salary">
+        <table>
+            <tr>
+                <th>Year</th>
+                <th>Team Salary</th>
+                <th>Salary Cap</th>
+                <th>Cap Space</th>
+            </tr>
+            {% for year, cap in salary_cap.items() %}
+            <tr>
+                <td>{{ year }}</td>
+                <td class="number">${{ team_salary[year] }}</td>
+                <td class="number">${{ cap }}</td>
+                <td class="number">${{ cap - team_salary[year] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <i>Team salary/cap space does not include cap hits penalties for dropped players.</i>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}League Manager Tools{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+<table>
+    <tr>
+        <th>Action</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><a class="action" href="{{ url_for('admin.blocks.index') }}">Manage blocks</a></td>
+        <td>Add, remove or edit auction blocks and slots.</td>
+    </tr>
+    <tr>
+        <td>Team assignment</td>
+        <td>Edit team assignments to users.</td>
+    </tr>
+    <tr>
+        <td>Slack member ids</td>
+        <td>Edit user slack member ids.</td>
+    </tr>
+</table>
+{% endblock %}

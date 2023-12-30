@@ -1,6 +1,6 @@
 html {
-    font-family: serif;
-    background: #eee;
+    font-family: 'Times New Roman', Times, serif;
+    background: white;
     padding: 1rem;
 }
 
@@ -9,6 +9,7 @@ body {
     margin: 0 auto;
     background: white;
 }
+
 
 h1,
 h2,
@@ -23,9 +24,18 @@ a {
     color: #377ba8;
 }
 
-td,
-tr {
+table .number {
+    text-align: right;
+}
+
+table .signed {
+    color: rgb(255, 92, 92);
+}
+
+th,
+td {
     text-align: left;
+    padding-right: 10px;
 }
 
 hr {
@@ -38,6 +48,10 @@ nav {
     display: flex;
     align-items: center;
     padding: 0;
+}
+
+nav>img {
+    margin-left: 10px;
 }
 
 nav h1 {
@@ -78,12 +92,12 @@ nav ul li span,
 }
 
 .content>.modifiable {
-    solid lightgray;
     display: flex;
     align-items: flex-end;
 }
 
-.content>.modifiable h1 {
+.content>.modifiable h1,
+h3 {
     flex: auto;
     margin: 1rem 0 0.25rem 0;
 }
@@ -113,19 +127,15 @@ nav ul li span,
     margin-top: 0;
 }
 
-.nomination .status {
-    white-space: pre-line;
+.nomination .bid,
+.status {
     margin: 0;
 }
 
-.nomination .match {
-    white-space: pre-line;
+.nomination .bids,
+.match,
+.sign {
     margin-bottom: 0;
-}
-
-.nomination .bid {
-    white-space: pre-line;
-    margin: 0;
 }
 
 .opened {
@@ -185,4 +195,22 @@ input[type=submit] {
 input[type=reset] {
     align-self: start;
     min-width: 10em;
+}
+
+.teams {
+    padding: 5px 0 15px 0;
+}
+
+.roster {
+    display: flex;
+    justify-content: space-between;
+}
+
+.players {
+    flex: 65%;
+}
+
+.submit-buttons {
+    display: flex;
+    column-gap: 10px;
 }

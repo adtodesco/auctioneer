@@ -1,14 +1,16 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Edit "{{ nomination.player.name }}"{% endblock %}</h1>
+<h1>{% block title %}Edit {{ nomination.player.name }} | {{nomination.player.team }} | {{
+    nomination.player.position.replace(",", ", ") }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+<hr>
 <form method="post">
-    <label for="slot_id">Auction ends</label>
+    <label for="slot_id">Auction closes at</label>
     <select name="slot_id" id="slot_id" required>
-        <option disabled selected value="">-- Select an end time --</option>
+        <option disabled selected value="">-- Select a date & time --</option>
         {% for num, slots in blocks.items() %}
         <optgroup label="Block {{ num }}">
             {% for slot in slots %}
@@ -24,7 +26,7 @@
     <label for="matcher_id">Match rights</label>
     <select name="matcher_id" id="matcher_id">
         {% if not nomination.matcher_id %}
-        <option value="">None</option>
+        <option value="">No matcher</option>
         {% else %}
         <option value="" selected>No matcher</option>
         {% endif %}
@@ -51,10 +53,10 @@
         {% endif %}
         {% endfor %}
     </select>
-    <input type="submit" value="Save">
-</form>
-<hr>
-<form action="{{ url_for('auction.delete', id=nomination.id) }}" method="post">
-    <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
+    <div class="submit-buttons">
+        <input type="submit" name="action" value="Save">
+        <input type="submit" name="action" value="Delete" class="danger"
+            onclick="return confirm('Are you sure you want to delete this nomination?');">
+    </div>
 </form>
 {% endblock %}

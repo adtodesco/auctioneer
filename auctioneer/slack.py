@@ -9,12 +9,11 @@ from .model import Notification
 
 
 def add_nomination_period_begun_notification(
-    block_number, block_opens_at, block_closes_at, max_nominations_per_block
+    block_number, block_opens_at, block_closes_at
 ):
     block_closes_at = block_closes_at.replace(tzinfo=pytz.utc)
     block_closes_at_et = block_closes_at.astimezone(pytz.timezone("US/Eastern"))
 
-    # TODO: Try removing http:// from website link
     notification = Notification(
         title=(
             f":incoming_envelope:  *Block {block_number} nomination period has begun!* "
@@ -22,8 +21,7 @@ def add_nomination_period_begun_notification(
         message=(
             f"The block {block_number} nomination period has begun and will last until "
             f"{block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET. Head to "
-            f"http://thedooauction.com to make up to {max_nominations_per_block} "
-            f"nominations in this block!"
+            f"thedooauction.com to make nominations in this block!"
         ),
         send_at=block_opens_at,
     )
@@ -34,13 +32,19 @@ def add_nomination_period_begun_notification(
     return notification
 
 
+def remove_nomination_period_begun_notification(block_number):
+    db.session.query(Notification).where(
+        Notification.title.contains(f"Block {block_number} nomination period has begun")
+    ).delete(synchronize_session=False)
+    db.session.commit()
+
+
 def add_nomination_period_end_notification(
-    block_number, block_closes_at, max_nominations_per_block, alert_hours=2
+    block_number, block_closes_at, alert_hours=2
 ):
     block_closes_at = block_closes_at.replace(tzinfo=pytz.utc)
     block_closes_at_et = block_closes_at.astimezone(pytz.timezone("US/Eastern"))
 
-    # TODO: Try removing http:// from website link
     notification = Notification(
         title=(
             f":envelope:  *Block {block_number} nomination period ends in {alert_hours}"
@@ -49,8 +53,7 @@ def add_nomination_period_end_notification(
         message=(
             f"The block {block_number} nomination period will start ending in "
             f"{alert_hours} hours. If you have not made your block {block_number} "
-            f"nominations head to http://thedooauction.com to make up to "
-            f"{max_nominations_per_block} nominations by "
+            f"nominations head to thedooauction.com to make your nominations by "
             f"{block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET."
         ),
         send_at=block_closes_at - timedelta(hours=alert_hours),
@@ -60,6 +63,13 @@ def add_nomination_period_end_notification(
     db.session.commit()
 
     return notification
+
+
+def remove_nomination_period_end_notification(block_number):
+    db.session.query(Notification).where(
+        Notification.title.contains(f"Block {block_number} nomination period ends")
+    ).delete(synchronize_session=False)
+    db.session.commit()
 
 
 def add_auctions_close_notification(
@@ -82,6 +92,13 @@ def add_auctions_close_notification(
     db.session.commit()
 
     return notification
+
+
+def remove_auctions_close_notification(block_number):
+    db.session.query(Notification).where(
+        Notification.title.contains(f"Block {block_number} auctions close")
+    ).delete(synchronize_session=False)
+    db.session.commit()
 
 
 def add_player_nominated_notification(nomination):

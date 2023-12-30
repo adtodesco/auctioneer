@@ -10,20 +10,33 @@ from flask import (
     session,
     url_for,
 )
-from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import abort
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db
-from .model import Bid, Nomination, User
+from .model import Bid, Nomination, Player, User
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @bp.route("/register", methods=("GET", "POST"))
 def register():
+    claimed_teams = db.session.execute(db.select(User.team)).scalars().all()
+    teams = (
+        db.session.execute(
+            db.select(Player.status)
+            .where(Player.status != "FA")
+            .order_by(Player.status)
+        )
+        .scalars()
+        .unique()
+    )
+    unclaimed_teams = [team for team in teams if team not in claimed_teams]
+
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
+        team = request.form["team"]
         slack_id = request.form["slack_id"] or None
         is_league_manager = True if "is_league_manager" in request.form else False
 
@@ -33,12 +46,15 @@ def register():
             error = "Username is required."
         elif not password:
             error = "Password is required."
+        elif not team:
+            error = "Team is required."
 
         if error is None:
             try:
                 user = User(
                     username=username,
                     password=generate_password_hash(password),
+                    team=team,
                     slack_id=slack_id,
                     is_league_manager=is_league_manager,
                 )
@@ -60,7 +76,7 @@ def register():
 
         flash(error)
 
-    return render_template("auth/register.html")
+    return render_template("auth/register.html", unclaimed_teams=unclaimed_teams)
 
 
 @bp.route("/login", methods=("GET", "POST"))
@@ -75,14 +91,14 @@ def login():
         ).scalar()
 
         if user is None:
-            error = "Incorrect username."
+            error = "The username you entered has not been registered."
         elif not check_password_hash(user.password, password):
-            error = "Incorrect password."
+            error = "The password you entered is invalid for this username."
 
         if error is None:
             session.clear()
             session["user_id"] = user.id
-            return redirect(url_for("index"))
+            return redirect(url_for("auction.index"))
 
         flash(error)
 
@@ -102,7 +118,7 @@ def load_logged_in_user():
 @bp.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("index"))
+    return redirect(url_for("auction.index"))
 
 
 def login_required(view):

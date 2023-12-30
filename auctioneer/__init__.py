@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 
 from flask import Flask
 from flask_moment import Moment
@@ -43,7 +43,8 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
-    from .model import Bid, Nomination, Notification, Player, Slot, User
+    # All models need to be imported before setting up the database
+    from .model import Bid, Nomination, Notification, Player, Slot, User  # noqa: F401
 
     with app.app_context():
         db.create_all()
@@ -55,7 +56,16 @@ def create_app(test_config=None):
     from . import auction
 
     app.register_blueprint(auction.bp)
-    app.add_url_rule("/", endpoint="index")
+
+    from . import admin, blocks
+
+    admin.bp.register_blueprint(blocks.bp)
+
+    app.register_blueprint(admin.bp)
+
+    from . import rosters
+
+    app.register_blueprint(rosters.bp)
 
     from . import tiebreaker
 

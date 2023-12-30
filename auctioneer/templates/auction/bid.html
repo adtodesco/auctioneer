@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Bid "{{ nomination.player.name }}"{% endblock %}</h1>
+<h1>{% block title %}Bid for {{ nomination.player.name }} | {{nomination.player.team }} | {{
+    nomination.player.position.replace(",", ", ") }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+<hr>
 <form method="post">
     <label for="value">Enter bid below. Your bid will become the players total salary if you win this player's
         auction.</label>
     <input name="value" id="value" value="{{ request.form['value'] or bid.value }}" required>
-    <input type="submit" value="Save">
+    <div class="submit-buttons">
+        <input type="submit" name="action" value="Save">
+        {% if g.user.id != nomination.nominator_id %}
+        <input type="submit" name="action" value="Reset" class="danger">
+    </div>
+    {% endif %}
 </form>
-<hr>
-{% if g.user.id != nomination.nominator_id %}
-<form method="post">
-    <input type="hidden" name="value" value="" />
-    <input class="danger" type="submit" value="Reset">
-</form>
-{% endif %}
 {% endblock %}

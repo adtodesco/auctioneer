@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Sign {{ player.name }} | {{player.team }} | {{ player.position.replace(",", ", ") }}{% endblock %}
+</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+<form method="post">
+    <label for="value">Contract</label>
+    <select name="contract" id="contract" required>
+        <option value="" selected>-- Select an option --</option>
+        {% for contract, salary in options.items() %}
+        {% if contract == player.contract %}
+        <option value="{{ contract }}" selected>${{ salary }}/year thru {{ contract }}</option>
+        {% else %}
+        <option value="{{ contract }}">${{ salary }}/year thru {{ contract }}</option>
+        {% endif %}
+        {% endfor %}
+    </select>
+    <input type="submit" name="action" value="Save">
+</form>
+{% endblock %}

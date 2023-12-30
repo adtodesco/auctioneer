@@ -7,6 +7,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, index=True, nullable=False)
     password = db.Column(db.String, nullable=False)
+    team = db.Column(db.String)
     slack_id = db.Column(db.String, nullable=False)
     is_league_manager = db.Column(db.Boolean, nullable=False, default=False)
     tiebreaker_order = db.Column(db.Integer, unique=True)
