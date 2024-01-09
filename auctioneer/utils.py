@@ -33,26 +33,26 @@ def get_open_slots(day_range=None):
     return slots
 
 
-def get_open_slots_for_user(user_id, day_range=None, max_nominations_per_block=None):
+def get_open_slots_for_user(user_id, day_range=None, max_nominations_per_round=None):
     slots = get_open_slots(day_range)
 
-    if max_nominations_per_block:
+    if max_nominations_per_round:
         statement = (
-            db.select(Slot.block, db.func.count("*"))
+            db.select(Slot.round, db.func.count("*"))
             .select_from(Nomination)
             .join(Slot)
             .where(Nomination.nominator_id == user_id)
         )
-        statement = statement.group_by(Slot.block)
+        statement = statement.group_by(Slot.round)
 
         user_nominations = db.session.execute(statement)
-        user_nominations_per_block = {n.block: int(n.count) for n in user_nominations}
+        user_nominations_per_round = {n.round: int(n.count) for n in user_nominations}
 
         filtered_slots = list()
         for slot in slots.scalars():
             if (
-                user_nominations_per_block.get(slot.block, 0)
-                < max_nominations_per_block
+                user_nominations_per_round.get(slot.round, 0)
+                < max_nominations_per_round
             ):
                 filtered_slots.append(slot)
 
@@ -61,17 +61,17 @@ def get_open_slots_for_user(user_id, day_range=None, max_nominations_per_block=N
     return slots
 
 
-def group_slots_by_block(slots):
-    blocks = dict()
+def group_slots_by_round(slots):
+    rounds = dict()
     for slot in slots:
-        if slot.block not in blocks:
-            blocks[slot.block] = list()
-        blocks[slot.block].append(slot)
+        if slot.round not in rounds:
+            rounds[slot.round] = list()
+        rounds[slot.round].append(slot)
 
-    for block in blocks.keys():
-        blocks[block] = sorted(blocks[block], key=lambda b: b.closes_at)
+    for round in rounds.keys():
+        rounds[round] = sorted(rounds[round], key=lambda b: b.closes_at)
 
-    return blocks
+    return rounds
 
 
 def players_from_fantrax_export(file):

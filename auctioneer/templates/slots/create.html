@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Create a block{% endblock %}</h1>
+<h1>{% block title %}Create a round{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <form method="post">
-    <label for="block_num">Block number</label>
-    <input name="block_num" id="block_num" type="number" required>
-    <label for="start_date">Block start date</label>
+    <label for="round_num">Round number</label>
+    <input name="round_num" id="round_num" type="number" required>
+    <label for="start_date">Round start date</label>
     <input name="start_date" id="start_date" type="date" required>
-    <label for="start_time">Block start time (ET)</label>
+    <label for="start_time">Round start time (ET)</label>
     <input name="start_time" id="start_time" type="time" required>
     <label for="num_slots">Number of slots</label>
     <input name="num_slots" id="num_slots" type="number" required>

@@ -9,21 +9,21 @@ from .model import Notification
 
 
 def add_nomination_period_begun_notification(
-    block_number, block_opens_at, block_closes_at
+    round_number, round_opens_at, round_closes_at
 ):
-    block_closes_at = block_closes_at.replace(tzinfo=pytz.utc)
-    block_closes_at_et = block_closes_at.astimezone(pytz.timezone("US/Eastern"))
+    round_closes_at = round_closes_at.replace(tzinfo=pytz.utc)
+    round_closes_at_et = round_closes_at.astimezone(pytz.timezone("US/Eastern"))
 
     notification = Notification(
         title=(
-            f":incoming_envelope:  *Block {block_number} nomination period has begun!* "
+            f":incoming_envelope:  *Round {round_number} nomination period has begun!* "
         ),
         message=(
-            f"The block {block_number} nomination period has begun and will last until "
-            f"{block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET. Head to "
-            f"thedooauction.com to make nominations in this block!"
+            f"The round {round_number} nomination period has begun and will last until "
+            f"{round_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET. Head to "
+            f"thedooauction.com to make nominations in this round!"
         ),
-        send_at=block_opens_at,
+        send_at=round_opens_at,
     )
 
     db.session.add(notification)
@@ -32,31 +32,31 @@ def add_nomination_period_begun_notification(
     return notification
 
 
-def remove_nomination_period_begun_notification(block_number):
+def remove_nomination_period_begun_notification(round_number):
     db.session.query(Notification).where(
-        Notification.title.contains(f"Block {block_number} nomination period has begun")
+        Notification.title.contains(f"Round {round_number} nomination period has begun")
     ).delete(synchronize_session=False)
     db.session.commit()
 
 
 def add_nomination_period_end_notification(
-    block_number, block_closes_at, alert_hours=2
+    round_number, round_closes_at, alert_hours=2
 ):
-    block_closes_at = block_closes_at.replace(tzinfo=pytz.utc)
-    block_closes_at_et = block_closes_at.astimezone(pytz.timezone("US/Eastern"))
+    round_closes_at = round_closes_at.replace(tzinfo=pytz.utc)
+    round_closes_at_et = round_closes_at.astimezone(pytz.timezone("US/Eastern"))
 
     notification = Notification(
         title=(
-            f":envelope:  *Block {block_number} nomination period ends in {alert_hours}"
+            f":envelope:  *Round {round_number} nomination period ends in {alert_hours}"
             f" hours!*"
         ),
         message=(
-            f"The block {block_number} nomination period will start ending in "
-            f"{alert_hours} hours. If you have not made your block {block_number} "
+            f"The round {round_number} nomination period will start ending in "
+            f"{alert_hours} hours. If you have not made your round {round_number} "
             f"nominations head to thedooauction.com to make your nominations by "
-            f"{block_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET."
+            f"{round_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET."
         ),
-        send_at=block_closes_at - timedelta(hours=alert_hours),
+        send_at=round_closes_at - timedelta(hours=alert_hours),
     )
 
     db.session.add(notification)
@@ -65,23 +65,23 @@ def add_nomination_period_end_notification(
     return notification
 
 
-def remove_nomination_period_end_notification(block_number):
+def remove_nomination_period_end_notification(round_number):
     db.session.query(Notification).where(
-        Notification.title.contains(f"Block {block_number} nomination period ends")
+        Notification.title.contains(f"Round {round_number} nomination period ends")
     ).delete(synchronize_session=False)
     db.session.commit()
 
 
 def add_auctions_close_notification(
-    block_number, auctions_start_closing_at, alert_hours=2
+    round_number, auctions_start_closing_at, alert_hours=2
 ):
     notification = Notification(
         title=(
-            f":rotating_light:  *Block {block_number} auctions close in {alert_hours} "
+            f":rotating_light:  *Round {round_number} auctions close in {alert_hours} "
             f"hours!*"
         ),
         message=(
-            f"Block {block_number} auctions will start closing in {alert_hours} hours. "
+            f"Round {round_number} auctions will start closing in {alert_hours} hours. "
             f"Get your bids in and make your final adjustments before the clock runs "
             f"out!"
         ),
@@ -94,9 +94,9 @@ def add_auctions_close_notification(
     return notification
 
 
-def remove_auctions_close_notification(block_number):
+def remove_auctions_close_notification(round_number):
     db.session.query(Notification).where(
-        Notification.title.contains(f"Block {block_number} auctions close")
+        Notification.title.contains(f"Round {round_number} auctions close")
     ).delete(synchronize_session=False)
     db.session.commit()
 
@@ -106,7 +106,7 @@ def add_player_nominated_notification(nomination):
         title=":mega:  *A player has been nominated!*",
         message=(
             f"<@{nomination.nominator_user.slack_id}> has nominated "
-            f"{str(nomination)}) in block {nomination.slot.block}."
+            f"{str(nomination)}) in round {nomination.slot.round}."
         ),
         send_at=datetime.utcnow(),
     )
@@ -174,7 +174,7 @@ def remove_auction_match_notification(nomination):
         )
 
 
-def format_slack_blocks(title, message):
+def format_slack_rounds(title, message):
     return [
         {"type": "section", "text": {"type": "mrkdwn", "text": title}},
         {"type": "divider"},
@@ -186,7 +186,7 @@ def send_notification(notification, webhook_url):
     webhook = WebhookClient(webhook_url)
     response = webhook.send(
         text=notification.title,
-        blocks=format_slack_blocks(notification.title, notification.message),
+        rounds=format_slack_rounds(notification.title, notification.message),
     )
     if response.status_code == 200:
         notification.sent = True

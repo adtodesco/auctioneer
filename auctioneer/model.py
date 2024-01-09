@@ -39,7 +39,7 @@ class Slot(db.Model):
     __tablename__ = "slot"
 
     id = db.Column(db.Integer, primary_key=True)
-    block = db.Column(db.Integer)
+    round = db.Column(db.Integer)
     closes_at = db.Column(db.DateTime, nullable=False)
 
     # One-to-one relationships

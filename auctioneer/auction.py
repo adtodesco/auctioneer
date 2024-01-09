@@ -31,14 +31,14 @@ from .utils import (
     get_open_slots,
     get_open_slots_for_user,
     get_user_bid_for_nomination,
-    group_slots_by_block,
+    group_slots_by_round,
 )
 
 bp = Blueprint("auction", __name__)
 
 # TODO: Add this to a configuration page
 MINIMUM_BID_VALUE = 11
-MAX_NOMINATIONS_PER_BLOCK = 3
+MAX_NOMINATIONS_PER_ROUND = 3
 MATCH_TIME_HOURS = 24
 NOMINATION_DAY_RANGE = (7, 4)
 MINIMUM_TOTAL_SALARY = {
@@ -111,12 +111,12 @@ def nominate():
     slots = get_open_slots_for_user(
         g.user.id,
         day_range=NOMINATION_DAY_RANGE,
-        max_nominations_per_block=MAX_NOMINATIONS_PER_BLOCK,
+        max_nominations_per_round=MAX_NOMINATIONS_PER_ROUND,
     )
     if not slots:
         flash("No nomination slots currently available.")
 
-    blocks = group_slots_by_block(slots)
+    rounds = group_slots_by_round(slots)
 
     if request.method == "POST":
         player_id = request.form["player_id"]
@@ -169,7 +169,7 @@ def nominate():
 
             return redirect(url_for("auction.index"))
 
-    for slots in blocks.values():
+    for slots in rounds.values():
         convert_slots_timezone(slots, "UTC", "US/Eastern")
 
     return render_template(
@@ -178,7 +178,7 @@ def nominate():
         positions=POSITIONS,
         users=users,
         players=players,
-        blocks=blocks,
+        rounds=rounds,
     )
 
 
@@ -313,9 +313,9 @@ def edit(nomination_id):
     slots = get_open_slots().scalars().all()
     current_slot = db.session.get(Slot, nomination.slot_id)
     slots.append(current_slot)
-    blocks = group_slots_by_block(slots)
+    rounds = group_slots_by_round(slots)
 
-    for slots in blocks.values():
+    for slots in rounds.values():
         convert_slots_timezone(slots, "UTC", "US/Eastern")
 
     return render_template(
@@ -324,7 +324,7 @@ def edit(nomination_id):
         positions=POSITIONS,
         teams=TEAMS,
         users=users,
-        blocks=blocks,
+        rounds=rounds,
     )
 
 

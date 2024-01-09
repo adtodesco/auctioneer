@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Manage rounds{% endblock %}</h1>
+<a class="action" href="{{ url_for('admin.slots.create') }}">Create a round</a>
+{% endblock %}
+
+{% block content %}
+<hr>
+{% for round, slots in rounds.items() %}
+<div class="modifiable">
+    <h3>Round {{ round }}</h3>
+    <a class="action" href="{{ url_for('admin.slots.edit', round=round) }}">Edit</a>
+</div>
+<ul>
+    {% for slot in slots %}
+    <li>{{ moment(slot.closes_at).format('LLL') }}</li>
+    {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}

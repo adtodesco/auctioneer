@@ -11,8 +11,8 @@
     <label for="slot_id">Auction closes at</label>
     <select name="slot_id" id="slot_id" required>
         <option disabled selected value="">-- Select a date & time --</option>
-        {% for num, slots in blocks.items() %}
-        <optgroup label="Block {{ num }}">
+        {% for num, slots in rounds.items() %}
+        <optgroup label="Round {{ num }}">
             {% for slot in slots %}
             {% if slot.id == nomination.slot_id %}
             <option value="{{ slot.id }}" selected>{{ slot.closes_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
