@@ -55,7 +55,7 @@ def roster(team):
         db.session.execute(
             db.select(Player).where(Player.status == team.upper())
             # .order_by(Player.contract)
-            .order_by(db.sql.desc(Player.salary))
+            .order_by(db.sql.expression.nullsfirst(db.sql.desc(Player.salary)))
         )
         .scalars()
         .all()

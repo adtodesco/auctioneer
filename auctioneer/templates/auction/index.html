@@ -114,7 +114,7 @@
 
     <div>
         <p class="bids">All bids: <strong>${{ nomination.Nomination.bids[0].value }}</strong>{% for bid in
-            nomination.Nomination.bids[1:] %}, ${{ bid.value }}{% endfor %}</p>
+            nomination.Nomination.bids[1:] %}{% if bid.value %}, ${{ bid.value }}{% endif %}{% endfor %}</p>
     </div>
 </div>
 <hr>

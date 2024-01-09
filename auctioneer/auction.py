@@ -252,6 +252,7 @@ def match(nomination_id):
                 f"Match for nomination {nomination} declined by {g.user}."
             )
 
+        assign_nominated_player_to_team(nomination)
         add_auction_won_notification(nomination)
 
         return redirect(url_for("auction.index"))
@@ -302,6 +303,7 @@ def edit(nomination_id):
                 db.session.commit()
                 current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
                 if nomination.matcher_id:
+                    # TODO: Only add if notification hasn't been sent yet
                     add_auction_match_notification(nomination, MATCH_TIME_HOURS)
                 if nomination.winner_id:
                     assign_nominated_player_to_team(nomination)
