@@ -38,7 +38,7 @@ bp = Blueprint("auction", __name__)
 
 # TODO: Add this to a configuration page
 MINIMUM_BID_VALUE = 11
-MAX_NOMINATIONS_PER_ROUND = 3
+MAX_NOMINATIONS_PER_ROUND = 2
 MATCH_TIME_HOURS = 24
 NOMINATION_DAY_RANGE = (7, 4)
 MINIMUM_TOTAL_SALARY = {
