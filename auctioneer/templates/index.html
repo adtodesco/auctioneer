@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}The DOO Free Agency Overview{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+<p>Welcome to the Don Orsillo Open free agency auction! The DOO free agency is done via sealed-bid auctions where the
+    highest bid equals the players total salary. Free agency takes place here at <a
+        href="{{url_for('home.index')}}">thedooauction.com</a> and results will be imported into fantrax at the end of
+    free agency.</p>
+
+<img class="center" src="{{ url_for('static', filename='brinkstruck.gif') }}" width="50%">
+
+<h3>Auction Rules</h3>
+<ul>
+    <li>Managers can nominate and bid on any player in the player pool with their bid equaling the total salary paid to
+        the player if they win the auction.</li>
+    <li>If a manager has match rights for a player they will get 24 hours to accept or decline the match option once the
+        auction has closed. A manager has match rights if their player is on a minor league or free agency contract
+        (i.e. if that player was <em>not</em> an in-season waiver claim). Check the <a target="_blank"
+            href="https://docs.google.com/spreadsheets/d/1p6XZBkywTkNDSrnoh7A86_ZFw-Ngtpm0Ulc0S9BA6oA/edit?usp=sharing">
+            2024 FA match eligibility sheet</a> for a list of match eligble players this year.</li>
+    <li>If there is ever a tie for the highest bid, a tiebreaker order is used to break the tie. When a manager wins an
+        auction via the tiebreaker they are moved
+        to the bottom of the tiebreaker order. The current tiebreaker order can be found in the <a
+            href="{{url_for('tiebreaker.index')}}">tiebreaker order page</a>.</li>
+    <li>Every Sunday at 5pm ET and Wednesday at 8pm ET a round of 28 player auctions will close (28 players per round *
+        2 rounds per week = 56 players per week).</li>
+    <li>Each round has a nomination period that starts 7 days before and ends 4 days before the round of player auctions
+        closes.</li>
+    <li>Managers can nominate up to two players in each round during the nomination period. When managers make a
+        nomination they also make an initial bid - this initial bid can be updated but it cannot be removed.</li>
+    <li>Managers can bid on any and all auctions between the time the nomination is made and the time that auction
+        closes.</li>
+    <li>The highest bid wins the auction. The highest bid becomes the minimum total salary.</li>
+</ul>
+
+<h3>Assigning Contracts</h3>
+<p>Once a player has been won in auction the player will appear on their teams roster and the manager can sign them
+    to a contract. Managers can modify their players' contracts through the end of free agency on March 10. Contracts
+    must meet the minimum contracts specified in the <a target="_blank"
+        href="https://docs.google.com/spreadsheets/d/1kgbaJwiIzM4mq9iLhm8pI0_-MsZcjrV_YETkNyeBZZM/edit?usp=sharing">salary
+        cap and contracts sheet</a>. Only valid contracts will be given as options in the signing page. </p>
+<ul>
+    <li>Note that the annual salary x contract length may end up being slightly greater than the total salary because
+        we’re always rounding up the annual salary value when the total salary cannot be divided evenly. For example -
+        if you win a bid with a $82 total salary, your contract options are 1-year at $82, 2-years at $41 or 3 years at
+        $28. In the 3 year option case the annual salary of $27.33 ($82 / 3 = $27.33) is rounded up to $28, and so the
+        total salary ends up being $28 * 3 = $84. Therefore your auction bid is technically the minimum total salary
+        depending on whether the annual salary needs to be rounded up. You may (or may not) want to take this into
+        consideration when making your bids.</li>
+</ul>
+
+<h3>Reminders</h3>
+<ul>
+    <li>Going forward only players signed to 2+ year contracts will be match eligible.</li>
+    <li>Once free agency closes the waiver wire opens back up which you can use to fill any remaining open roster spots.
+        Waiver wire claims process on Sunday nights and - similarly to the free agency auction - the highest bidder wins
+        the claim and the player assigned a contract with the bid equaling their total salary.</li>
+</ul>
+
+<h3>Timeline</h3>
+<ul>
+    <li>Sunday, February 4 @ 7:15 pm ET - The nomination period for round 1 auctions opens. You have 3 days to nominate
+        up to 2 players in this round.</li>
+    <li>Wednesday, February 7 @ 9:15 pm ET - The nomination period for round 2 auctions opens. You have 3 days to
+        nominate up to 2 players in this round.</li>
+    <li>Sunday, February 11 @ 5:00 pm ET - round 1 auctions begin to close. Auctions close every 5 minutes between 5pm
+        ET and 7:15pm ET.</li>
+    <li>Sunday, February 11 @ 7:15 pm ET - The nomination period for round 3 auctions opens. You have 3 days to
+        nominate up to 2 players in this round.</li>
+    <li>Wednesday, February 14 @ 7:00 pm ET - round 2 auctions begin to close. Auctions close every 5 minutes between
+        7pm ET and 9:15 pm ET.</li>
+    <li>Wednesday, February 14 @ 9:15 pm ET - The nomination period for round 4 auctions opens. You have 3 days to
+        nominate up to 2 players in this round.</li>
+    <li>Repeat every Sunday/Wednesday through round 8 closing on Wednesday, March 6th.</li>
+    <li>Wednesday, March 10 @ Midnight ET - All free agent contracts must be finalized. The final auction results will
+        be downloaded and rosters will be updated in Fantrax over the next few days.</li>
+    <li>Wednesday, March 20 - Thursday, March 21 - SDP v LAD games in Korea.</li>
+    <li>Thursday, March 28 - MLB opening day.</li>
+</ul>
+
+<h3>League Resources</h3>
+<ul>
+    <li><a target="_blank"
+            href="https://docs.google.com/document/d/1ZzluMv58VeK26Kr92LESMp3iYygCSPg42hGWftxtnYg/edit?usp=sharing">The
+            DOO Constitution</a></li>
+    <li><a target="_blank"
+            href="https://docs.google.com/spreadsheets/d/1kgbaJwiIzM4mq9iLhm8pI0_-MsZcjrV_YETkNyeBZZM/edit?usp=sharing">The
+            DOO Salary Cap and Contracts</a></li>
+    <li><a target="_blank"
+            href="https://docs.google.com/spreadsheets/d/1p6XZBkywTkNDSrnoh7A86_ZFw-Ngtpm0Ulc0S9BA6oA/edit?usp=sharing">The
+            DOO 2024 FA Match Eligibility</a></li>
+</ul>
+{% endblock %}

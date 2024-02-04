@@ -49,6 +49,10 @@ def create_app(test_config=None):
     with app.app_context():
         db.create_all()
 
+    from . import home
+
+    app.register_blueprint(home.bp)
+
     from . import auth
 
     app.register_blueprint(auth.bp)

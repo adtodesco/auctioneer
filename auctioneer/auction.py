@@ -34,7 +34,7 @@ from .utils import (
     group_slots_by_round,
 )
 
-bp = Blueprint("auction", __name__)
+bp = Blueprint("auction", __name__, url_prefix="/auction")
 
 # TODO: Add this to a configuration page
 MINIMUM_BID_VALUE = 11
