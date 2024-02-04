@@ -61,7 +61,7 @@ def roster(team):
         .all()
     )
 
-    team_salary = {year: 0 for year in SALARY_CAP}
+    team_salary = {year: {"salary": 0, "players": 0} for year in SALARY_CAP}
     min_year = list(SALARY_CAP.keys())[0]
     max_year = list(SALARY_CAP.keys())[-1]
     for player in players:
@@ -69,7 +69,8 @@ def roster(team):
             continue
         year = min_year
         while year <= player.contract and year <= max_year:
-            team_salary[year] += player.salary
+            team_salary[year]["salary"] += player.salary
+            team_salary[year]["players"] += 1
             year += 1
 
     return render_template(

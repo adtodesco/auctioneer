@@ -53,6 +53,7 @@
         <table>
             <tr>
                 <th>Year</th>
+                <th>Players</th>
                 <th>Team Salary</th>
                 <th>Salary Cap</th>
                 <th>Cap Space</th>
@@ -60,13 +61,14 @@
             {% for year, cap in salary_cap.items() %}
             <tr>
                 <td>{{ year }}</td>
-                <td class="number">${{ team_salary[year] }}</td>
+                <td class="number">{{ team_salary[year]['players'] }}</td>
+                <td class="number">${{ team_salary[year]['salary'] }}</td>
                 <td class="number">${{ cap }}</td>
-                <td class="number">${{ cap - team_salary[year] }}</td>
+                <td class="number">${{ cap - team_salary[year]['salary'] }}</td>
             </tr>
             {% endfor %}
         </table>
-        <i>Team salary/cap space does not include cap hits penalties for dropped players.</i>
+        <i>Team salary/cap space does not include cap hit penalties for dropped players.</i>
     </div>
 </div>
 {% endblock %}
