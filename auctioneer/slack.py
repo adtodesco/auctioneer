@@ -186,7 +186,7 @@ def send_notification(notification, webhook_url):
     webhook = WebhookClient(webhook_url)
     response = webhook.send(
         text=notification.title,
-        rounds=format_slack_rounds(notification.title, notification.message),
+        blocks=format_slack_rounds(notification.title, notification.message),
     )
     if response.status_code == 200:
         notification.sent = True
