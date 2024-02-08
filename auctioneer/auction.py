@@ -81,9 +81,9 @@ def index():
     def sort_key(n):
         return n.Nomination.slot.closes_at
 
-    open_nominations = sorted(open_nominations, key=sort_key, reverse=True)
-    match_nominations = sorted(match_nominations, key=sort_key, reverse=True)
-    closed_nominations = sorted(closed_nominations, key=sort_key, reverse=True)
+    open_nominations = sorted(open_nominations, key=sort_key)
+    match_nominations = sorted(match_nominations, key=sort_key)
+    closed_nominations = sorted(closed_nominations, key=sort_key)
 
     return render_template(
         "auction/index.html",
