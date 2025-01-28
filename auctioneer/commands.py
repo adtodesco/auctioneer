@@ -41,8 +41,8 @@ def close_nominations():
         .join(Slot)
         .where(Nomination.winner_id.is_(None))
         .where(
-            (Nomination.matcher_id.is_(None) & (current_datetime > Slot.closes_at))
-            | (Nomination.matcher_id.is_not(None) & (match_datetime > Slot.closes_at))
+            (Nomination.player.matcher_id.is_(None) & (current_datetime > Slot.closes_at))
+            | (Nomination.player.matcher_id.is_not(None) & (match_datetime > Slot.closes_at))
         )
     )
     nominations = db.session.execute(statement).scalars().all()

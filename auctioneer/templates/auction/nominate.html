@@ -25,13 +25,6 @@
         </optgroup>
         {% endfor %}
     </select>
-    <label for="matcher_id">Match rights</label>
-    <select name="matcher_id" id="matcher_id">
-        <option selected value="">None</option>
-        {% for user in users %}
-        <option value="{{ user.id }}">{{ user.username }}</option>
-        {% endfor %}
-    </select>
     <label for="bid_value">Enter bid below. Your bid will become the players total salary if you win this player's
         auction.</label>
     <input name="bid_value" id="bid_value" value="{{ request.form['bid_value'] }}" required>

@@ -142,7 +142,7 @@ def add_auction_match_notification(nomination, match_time_hours):
     notification = Notification(
         title=MATCH_NOTIFICATION_TITLE,
         message=(
-            f"<@{nomination.matcher_user.slack_id}> has {match_time_hours} hours to "
+            f"<@{nomination.player.matcher_user.slack_id}> has {match_time_hours} hours to "
             f"accept or decline to match the highest bid for {str(nomination)}."
         ),
         send_at=nomination.slot.closes_at,

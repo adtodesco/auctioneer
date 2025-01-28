@@ -23,21 +23,6 @@
         </optgroup>
         {% endfor %}
     </select>
-    <label for="matcher_id">Match rights</label>
-    <select name="matcher_id" id="matcher_id">
-        {% if not nomination.matcher_id %}
-        <option value="">No matcher</option>
-        {% else %}
-        <option value="" selected>No matcher</option>
-        {% endif %}
-        {% for user in users %}
-        {% if user.id == nomination.matcher_id %}
-        <option value="{{ user.id }}" selected>{{ user.username }}</option>
-        {% else %}
-        <option value="{{ user.id }}">{{ user.username }}</option>
-        {% endif %}
-        {% endfor %}
-    </select>
     <label for="winner_id">Winner</label>
     <select name="winner_id" id="winner_id">
         {% if not nomination.winner_id %}

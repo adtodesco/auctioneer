@@ -72,7 +72,7 @@ def index():
             closed_nominations.append(row)
         elif (
             row.Nomination.slot.closes_at < datetime.utcnow()
-            and row.Nomination.matcher_id
+            and row.Nomination.player.matcher_id
         ):
             match_nominations.append(row)
         else:
@@ -121,7 +121,6 @@ def nominate():
     if request.method == "POST":
         player_id = request.form["player_id"]
         slot_id = request.form["slot_id"]
-        matcher_id = request.form["matcher_id"] or None
         bid_value = request.form["bid_value"]
 
         error = None
@@ -148,7 +147,6 @@ def nominate():
                 player_id=player_id,
                 slot_id=slot_id,
                 nominator_id=g.user.id,
-                matcher_id=matcher_id,
                 winner_id=None,
             )
             for user in users:
@@ -164,7 +162,7 @@ def nominate():
             )
 
             add_player_nominated_notification(nomination)
-            if matcher_id:
+            if nomination.player.matcher_id:
                 add_auction_match_notification(nomination, MATCH_TIME_HOURS)
 
             return redirect(url_for("auction.index"))
@@ -231,7 +229,7 @@ def bid(nomination_id):
 @login_required
 def match(nomination_id):
     nomination = db.session.get(Nomination, nomination_id)
-    if g.user.id != nomination.matcher_id:
+    if g.user.id != nomination.player.matcher_id:
         abort(403)
 
     if request.method == "POST":
@@ -270,12 +268,11 @@ def edit(nomination_id):
 
     if request.method == "POST":
         slot_id = request.form["slot_id"]
-        matcher_id = request.form["matcher_id"] or None
         winner_id = request.form["winner_id"] or None
         action = request.form["action"]
 
         if action.lower() == "delete":
-            if nomination.matcher_id:
+            if nomination.player.matcher_id:
                 remove_auction_match_notification(nomination)
             if nomination.winner_id:
                 unassign_nominated_player_to_team(nomination)
@@ -292,17 +289,16 @@ def edit(nomination_id):
             if error:
                 flash(error)
             else:
-                if nomination.matcher_id and nomination.matcher_id != matcher_id:
+                if nomination.player.matcher_id:
                     remove_auction_match_notification(nomination)
                 if nomination.winner_id and nomination.winner_id != winner_id:
                     unassign_nominated_player_to_team(nomination)
                 nomination.slot_id = slot_id
-                nomination.matcher_id = matcher_id
                 nomination.winner_id = winner_id
                 db.session.add(nomination)
                 db.session.commit()
                 current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
-                if nomination.matcher_id:
+                if nomination.player.matcher_id:
                     # TODO: Only add if notification hasn't been sent yet
                     add_auction_match_notification(nomination, MATCH_TIME_HOURS)
                 if nomination.winner_id:

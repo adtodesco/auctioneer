@@ -30,9 +30,11 @@ class Player(db.Model):
     status = db.Column(db.String, nullable=False)
     salary = db.Column(db.Integer, default=None)
     contract = db.Column(db.Integer, default=None)
+    matcher_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
     # One-to-one relationships
     nomination = db.relationship("Nomination", back_populates="player")
+    matcher_user = db.relationship("User", foreign_keys=matcher_id)
 
 
 class Slot(db.Model):
@@ -57,7 +59,6 @@ class Nomination(db.Model):
         db.Integer, db.ForeignKey("slot.id"), unique=True, nullable=False
     )
     nominator_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    matcher_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     winner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
 
@@ -65,7 +66,6 @@ class Nomination(db.Model):
     player = db.relationship("Player", back_populates="nomination")
     slot = db.relationship("Slot", back_populates="nomination")
     nominator_user = db.relationship("User", foreign_keys=nominator_id)
-    matcher_user = db.relationship("User", foreign_keys=matcher_id)
     winner_user = db.relationship("User", foreign_keys=winner_id)
 
     # One-to-many relationships

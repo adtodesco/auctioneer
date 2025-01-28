@@ -28,8 +28,8 @@
         <p class="status">Auction <strong>OPEN</strong> until: {{
             moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Round {{ nomination.Nomination.slot.round }}]
         </p>
-        {% if nomination.Nomination.matcher_id %}
-        <p class="match">Match rights: <strong>{{ nomination.Nomination.matcher_user.username }}</strong></p>
+        {% if nomination.Nomination.player.matcher_id %}
+        <p class="match">Match rights: <strong>{{ nomination.Nomination.player.matcher_user.username }}</strong></p>
         {% endif %}
     </div>
 
@@ -64,12 +64,12 @@
         <p class="status">Auction <strong>CLOSED</strong> on: {{
             moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Round {{ nomination.Nomination.slot.round }}]
         </p>
-        {% if nomination.Nomination.matcher_id %}
-        <p class="match"><strong>{{ nomination.Nomination.matcher_user.username }}</strong> has 24 hours to match!</p>
+        {% if nomination.Nomination.player.matcher_id %}
+        <p class="match"><strong>{{ nomination.Nomination.player.matcher_user.username }}</strong> has 24 hours to match!</p>
         {% endif %}
     </div>
 
-    {% if g.user.id == nomination.Nomination.matcher_id %}
+    {% if g.user.id == nomination.Nomination.player.matcher_id %}
     <div class="modifiable">
         <div>
             <p class="bid">Match the ${{ nomination.Nomination.bids[0].value }} bid for
