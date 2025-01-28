@@ -14,6 +14,10 @@ build/
 *.egg-info/
 
 cert.pem
+cert.csr
 key.pem
 
 web.env
+
+.vscode/
+.DS_Store
