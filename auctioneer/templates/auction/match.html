@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Match "{{ nomination.player.name }}"{% endblock %}</h1>
+<h1>{% block title %}Match bid{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+<hr>
 <form method="post">
-    <label for="match">Match the ${{ nomination.bids[0].value }} bid for {{nomination.player.name }}?</label>
+    <label for="match">Match the ${{ nomination.bids[0].value }} bid and re-sign {{nomination.player.name }}?</label>
     <select name="match" id="match" required>
         <option disabled selected value="">-- Select yes or no --</option>
         <option value="yes">Yes</option>
