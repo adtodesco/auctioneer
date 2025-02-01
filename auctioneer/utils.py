@@ -2,7 +2,7 @@ import csv
 from datetime import datetime, timedelta
 
 from . import db
-from .model import Bid, Nomination, Player, Slot
+from .model import Bid, Nomination, Player, Slot, User
 
 
 def day_range_to_times(day_range):
@@ -74,10 +74,11 @@ def group_slots_by_round(slots):
     return rounds
 
 
-def players_from_fantrax_export(file):
+def players_from_fantrax_export(file, users):
     with open(file) as f:
         reader = csv.DictReader(f)
         players = list()
+        short_name_to_user = {user.short_team_name: user.id for user in users}
         for player in reader:
             if player["Status"] == "FA":
                 salary = None
@@ -92,10 +93,28 @@ def players_from_fantrax_export(file):
                     name=player["Player"],
                     team=player["Team"],
                     position=player["Position"],
-                    status=player["Status"],
                     salary=salary,
                     contract=contract,
+                    manager_id=short_name_to_user.get(player["Status"]),
                 )
             )
 
     return players
+
+
+def users_from_file(file):
+    with open(file) as f:
+        reader = csv.DictReader(f)
+        users = list()
+        for team in reader:
+            users.append(
+                User(
+                    team_name=team["team_name"],
+                    short_team_name=team["short_team_name"],
+                    tiebreaker_order=int(team["tiebreaker_order"]),
+                    slack_id=team["slack_id"],
+                    is_league_manager=team["is_league_manager"] == "TRUE",
+                )
+            )
+
+    return users

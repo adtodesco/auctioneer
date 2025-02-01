@@ -1,13 +1,12 @@
 from flask import Blueprint, g, redirect, render_template, url_for
 
 from . import db
-from .model import Player
+from .model import Player, User
 
 bp = Blueprint("rosters", __name__, url_prefix="/rosters")
 
 # TODO: Store this in some sort of config or DB table
 SALARY_CAP = {
-    2024: 1082,
     2025: 1125,
     2026: 1170,
     2027: 1217,
@@ -17,45 +16,63 @@ SALARY_CAP = {
     2031: 1423,
     2032: 1480,
     2033: 1539,
+    2034: 1601,
 }
 
 
 @bp.route("/")
 def index():
     if g.user:
-        team = g.user.team.lower()
+        short_team_name = g.user.short_team_name.lower()
     else:
-        teams = (
+        short_team_names = (
             db.session.execute(
-                db.select(Player.status)
-                .where(Player.status != "FA")
-                .order_by(Player.status)
+                db.select(User.short_team_name).order_by(User.short_team_name)
             )
             .scalars()
-            .unique()
             .all()
         )
-        team = teams[0]
-    return redirect(url_for("rosters.roster", team=team.lower()))
+        short_team_name = short_team_names[0]
+    return redirect(url_for("rosters.roster", team=short_team_name.lower()))
 
 
 @bp.route("/<string:team>/")
 def roster(team):
-    teams = (
-        db.session.execute(
-            db.select(Player.status)
-            .where(Player.status != "FA")
-            .order_by(Player.status)
-        )
-        .scalars()
-        .unique()
-        .all()
-    )
+    # teams = (
+    #     db.session.execute(
+    #         db.select(Player.status)
+    #         .where(Player.status != "FA")
+    #         .order_by(Player.status)
+    #     )
+    #     .scalars()
+    #     .unique()
+    #     .all()
+    # )
+    # players = (
+    #     db.session.execute(
+    #         db.select(Player).where(Player.status == team.upper())
+    #         # .order_by(Player.contract)
+    #         .order_by(db.sql.expression.nullsfirst(db.sql.desc(Player.salary)))
+    #     )
+    #     .scalars()
+    #     .all()
+    # )
+
+    user = db.session.execute(
+        db.select(User).where(User.short_team_name == team.upper())
+    ).scalar()
     players = (
         db.session.execute(
-            db.select(Player).where(Player.status == team.upper())
-            # .order_by(Player.contract)
-            .order_by(db.sql.expression.nullsfirst(db.sql.desc(Player.salary)))
+            db.select(Player)
+            .join(User, Player.manager_id == User.id)
+            .where(User.short_team_name == team.upper())
+        )
+        .scalars()
+        .all()
+    )
+    short_team_names = (
+        db.session.execute(
+            db.select(User.short_team_name).order_by(User.short_team_name)
         )
         .scalars()
         .all()
@@ -75,9 +92,9 @@ def roster(team):
 
     return render_template(
         "rosters/roster.html",
-        selected_team=team,
+        selected_user=user,
         players=players,
-        teams=teams,
+        teams=short_team_names,
         salary_cap=SALARY_CAP,
         team_salary=team_salary,
     )

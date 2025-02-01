@@ -14,31 +14,27 @@ from werkzeug.exceptions import abort
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import db
-from .model import Bid, Nomination, Player, User
+from .model import User
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @bp.route("/register", methods=("GET", "POST"))
 def register():
-    claimed_teams = db.session.execute(db.select(User.team)).scalars().all()
-    teams = (
+    unclaimed_teams = (
         db.session.execute(
-            db.select(Player.status)
-            .where(Player.status != "FA")
-            .order_by(Player.status)
+            db.select(User.team_name)
+            .order_by(User.team_name)
+            .where(User.username.is_(None))
         )
         .scalars()
-        .unique()
+        .all()
     )
-    unclaimed_teams = [team for team in teams if team not in claimed_teams]
 
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
         team = request.form["team"]
-        slack_id = request.form["slack_id"] or None
-        is_league_manager = True if "is_league_manager" in request.form else False
 
         error = None
 
@@ -50,28 +46,27 @@ def register():
             error = "Team is required."
 
         if error is None:
-            try:
-                user = User(
-                    username=username,
-                    password=generate_password_hash(password),
-                    team=team,
-                    slack_id=slack_id,
-                    is_league_manager=is_league_manager,
-                )
+            user = db.session.execute(
+                db.select(User).where(User.team_name == team)
+            ).scalar()
+            if not user:
+                error = "Invalid team."
+            else:
+                user.username = username
+                user.password = generate_password_hash(password)
                 db.session.add(user)
                 db.session.commit()
 
-                nominations = db.session.execute(db.select(Nomination))
-                for nomination in nominations.scalars():
-                    nomination.bids.append(
-                        Bid(user_id=user.id, nomination_id=nomination.id, value=None)
-                    )
-                db.session.add_all(nominations)
-                db.session.commit()
+                # TODO: This should be able to be removed since all users are created before app start, but keeping
+                # commented out for now
+                # nominations = db.session.execute(db.select(Nomination))
+                # for nomination in nominations.scalars():
+                #     nomination.bids.append(
+                #         Bid(user_id=user.id, nomination_id=nomination.id, value=None)
+                #     )
+                # db.session.add_all(nominations)
+                # db.session.commit()
 
-            except db.exc.IntegrityError:
-                error = f"User {username} is already registered."
-            else:
                 return redirect(url_for("auth.login"))
 
         flash(error)

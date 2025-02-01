@@ -12,16 +12,12 @@
         <th>Description</th>
     </tr>
     <tr>
-        <td><a class="action" href="{{ url_for('admin.slots.index') }}">Manage slots</a></td>
+        <td><a class="action" href="{{ url_for('admin.slots.index') }}">Edit slots</a></td>
         <td>Add, remove or edit auction slots.</td>
     </tr>
     <tr>
-        <td>Team assignment</td>
-        <td>Edit team assignments to users.</td>
-    </tr>
-    <tr>
-        <td>Slack member ids</td>
-        <td>Edit user slack member ids.</td>
+        <td><a class="action" href="{{ url_for('admin.players.index') }}">Edit players</a></td>
+        <td>Edit players status and match rights.</td>
     </tr>
 </table>
 {% endblock %}

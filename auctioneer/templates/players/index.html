@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Players{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Team</th>
+            <th>Position</th>
+            <th>Status</th>
+            <th>Match Rights</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="playerTableBody">
+        {% for player in players %}
+        <tr>
+            <td>{{ player.name }}</td>
+            <td>{{ player.team }}</td>
+            <td>{{ player.position }}</td>
+            <td>{{ player.manager_user.short_team_name or "FA" }}</td>
+            <td>{{ player.matcher_user.short_team_name or "--" }}</td>
+            <td><a class="action" href="{{ url_for('admin.players.edit', player_id=player.id) }}">Edit</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

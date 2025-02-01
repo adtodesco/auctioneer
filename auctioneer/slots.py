@@ -83,7 +83,7 @@ def create():
                 slots.append(Slot(round=round_num, closes_at=closes_at))
                 closes_at += slot_timedelta
 
-            convert_slots_timezone(slots, "US/Eastern", "UTC")
+            convert_slots_timezone(slots, from_tz="US/Eastern", to_tz="UTC")
 
             db.session.add_all(slots)
             db.session.commit()

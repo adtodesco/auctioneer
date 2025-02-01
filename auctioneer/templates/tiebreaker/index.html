@@ -12,7 +12,7 @@
 <ol>
     {% for user in users %}
     {% if user.tiebreaker_order %}
-    <li>{{ user.username }}</li>
+    <li>{{ user.short_team_name }}</li>
     {% endif %}
     {% endfor %}
 </ol>

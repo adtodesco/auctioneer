@@ -8,19 +8,31 @@ from . import db
 from .auction import assign_nominated_player_to_team, close_nomination
 from .model import Nomination, Notification, Slot
 from .slack import add_auction_won_notification, send_notification
-from .utils import players_from_fantrax_export
+from .utils import players_from_fantrax_export, users_from_file
 
 
 def init_db():
     # All models need to be imported before setting up the database
-    from .model import Bid, Nomination, Notification, Player, Slot, User  # noqa: F401
+    from .model import (  # noqa: F401
+        Bid,
+        Nomination,
+        Notification,
+        Player,
+        Slot,
+        User,
+    )
 
     with current_app.app_context():
         db.drop_all()
         db.create_all()
 
+    users_file = os.path.join(current_app.root_path, "data", "users.csv")
+    users = users_from_file(users_file)
+    db.session.add_all(users)
+    db.session.flush()
+
     players_file = os.path.join(current_app.root_path, "data", "players.csv")
-    players = players_from_fantrax_export(players_file)
+    players = players_from_fantrax_export(players_file, users)
     db.session.add_all(players)
 
     db.session.commit()
@@ -39,16 +51,22 @@ def close_nominations():
     statement = (
         db.select(Nomination)
         .join(Slot)
-        .where(Nomination.winner_id.is_(None))
+        .where(Nomination.player.manager_id.is_(None))
         .where(
-            (Nomination.player.matcher_id.is_(None) & (current_datetime > Slot.closes_at))
-            | (Nomination.player.matcher_id.is_not(None) & (match_datetime > Slot.closes_at))
+            (
+                Nomination.player.matcher_id.is_(None)
+                & (current_datetime > Slot.closes_at)
+            )
+            | (
+                Nomination.player.matcher_id.is_not(None)
+                & (match_datetime > Slot.closes_at)
+            )
         )
     )
     nominations = db.session.execute(statement).scalars().all()
     for nomination in nominations:
         close_nomination(nomination)
-        assign_nominated_player_to_team(nomination)
+        # assign_nominated_player_to_team(nomination)
         add_auction_won_notification(nomination)
 
     return nominations

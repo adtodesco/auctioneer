@@ -7,19 +7,20 @@
 {% block content %}
 <hr>
 <div class="teams">
-    {% if teams[0] == selected_team.upper() %}
+    {% if teams[0] == selected_user.short_team_name.upper() %}
     <b>{{ teams[0] }}</b>
     {% else %}
     <a class="action" href="{{ url_for('rosters.roster', team=teams[0].lower()) }}">{{ teams[0] }}</a>
     {% endif %}
     {% for team in teams[1:] %}
-    {% if team == selected_team.upper() %}
+    {% if team == selected_user.short_team_name.upper() %}
     | <b>{{ team }}</b>
     {% else %}
     | <a class="action" href="{{ url_for('rosters.roster', team=team.lower()) }}">{{ team }}</a>
     {% endif %}
     {% endfor %}
 </div>
+<!-- <h2>{{ selected_user.team_name }}</h2> -->
 <div class="roster">
     <div class="players">
         {% if players %}
@@ -33,20 +34,19 @@
                 <th></th>
             </tr>
             {% for player in players %}
-
             <tr {% if player.nomination %} class="signed" {% endif %}>
                 <td>{{ player["name"] }}</td>
                 <td>{{ player["team"] }}</td>
                 <td>{{ player["position"] }}</td>
                 <td class="number">{% if player.salary %}${{ player["salary"] }}{% else %}--{% endif %}</td>
                 <td class="number">{% if player.contract %}{{ player["contract"] }}{% else %}--{% endif %}</td>
-                <td>{% if player.nomination and player.nomination[0].winner_user == g.user %}<a class="action"
+                <td>{% if player.nomination and player.nomination[0].player.manager_user == g.user %}<a class="action"
                         href="{{ url_for('auction.sign', player_id=player.id) }}">Sign</a>{% endif %}</td>
             </tr>
             {% endfor %}
         </table>
         {% else %}
-        <p>No players on team <b>{{ selected_team }}</b> - this team may not exist.</p>
+        <p>No players on team <b>{{ selected_user.team_name }}</b> - this team may not exist.</p>
         {% endif %}
     </div>
     <div class="salary">

@@ -121,7 +121,7 @@ def add_auction_won_notification(nomination):
     notification = Notification(
         title=":moneybag:  *An auction has been won!*",
         message=(
-            f"<@{nomination.winner_user.slack_id}> has won the auction for "
+            f"<@{nomination.player.manager_user.slack_id}> has won the auction for "
             f"{str(nomination)} with a bid of ${nomination.bids[0].value}!"
         ),
         send_at=datetime.utcnow(),

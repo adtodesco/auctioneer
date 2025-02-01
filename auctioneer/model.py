@@ -5,18 +5,22 @@ class User(db.Model):
     __tablename__ = "user"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True, index=True, nullable=False)
-    password = db.Column(db.String, nullable=False)
-    team = db.Column(db.String)
+    username = db.Column(db.String, unique=True, index=True)
+    password = db.Column(db.String)
+    team_name = db.Column(db.String, nullable=False)
+    short_team_name = db.Column(db.String, nullable=False)
+    tiebreaker_order = db.Column(db.Integer, unique=True)
     slack_id = db.Column(db.String, nullable=False)
     is_league_manager = db.Column(db.Boolean, nullable=False, default=False)
-    tiebreaker_order = db.Column(db.Integer, unique=True)
 
     # One-to-many relationships
     bids = db.relationship("Bid", back_populates="user")
 
     def __repr__(self):
-        return f"<User {self.username}>"
+        return f"<User {str(self)}>"
+
+    def __str__(self):
+        return self.username or self.team_name
 
 
 class Player(db.Model):
@@ -27,13 +31,14 @@ class Player(db.Model):
     name = db.Column(db.String, nullable=False)
     team = db.Column(db.String, nullable=False)
     position = db.Column(db.String, nullable=False)
-    status = db.Column(db.String, nullable=False)
     salary = db.Column(db.Integer, default=None)
     contract = db.Column(db.Integer, default=None)
+    manager_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     matcher_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
     # One-to-one relationships
     nomination = db.relationship("Nomination", back_populates="player")
+    manager_user = db.relationship("User", foreign_keys=manager_id)
     matcher_user = db.relationship("User", foreign_keys=matcher_id)
 
 
@@ -59,14 +64,14 @@ class Nomination(db.Model):
         db.Integer, db.ForeignKey("slot.id"), unique=True, nullable=False
     )
     nominator_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    winner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    # winner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
 
     # One-to-one relationships
     player = db.relationship("Player", back_populates="nomination")
     slot = db.relationship("Slot", back_populates="nomination")
     nominator_user = db.relationship("User", foreign_keys=nominator_id)
-    winner_user = db.relationship("User", foreign_keys=winner_id)
+    # winner_user = db.relationship("User", foreign_keys=winner_id)
 
     # One-to-many relationships
     bids = db.relationship(

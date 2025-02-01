@@ -17,12 +17,6 @@
         <option value="{{ team }}">{{ team }}</option>
         {% endfor %}
     </select>
-    <label for="slack_id">Slack Member ID <span
-            title="Slack member id is used to tag you in auction notifications. Find your member ID in Slack by navigating to: 'Profile' -> 3-dot-button -> 'Copy member ID'.">&#9432;</span></label>
-    <input name="slack_id" id="slack_id" required>
-    <label for="is_league_manager">
-        <input type="checkbox" name="is_league_manager" id="is_league_manager"> League manager
-    </label>
     <input type="submit" value="Register">
 </form>
 {% endblock %}

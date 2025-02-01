@@ -61,9 +61,11 @@ def create_app(test_config=None):
 
     app.register_blueprint(auction.bp)
 
-    from . import admin, slots
+    from . import admin, players, slots
 
     admin.bp.register_blueprint(slots.bp)
+
+    admin.bp.register_blueprint(players.bp)
 
     app.register_blueprint(admin.bp)
 

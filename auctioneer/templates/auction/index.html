@@ -16,8 +16,8 @@
         <div>
             <h3>{{ nomination.Nomination.player.name }} | {{nomination.Nomination.player.team }} | {{
                 nomination.Nomination.player.position.replace(",", ", ") }}</h3>
-            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{
-                nomination.Nomination.nominator_user.username }}</p>
+            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by the {{
+                nomination.Nomination.nominator_user.team_name }}</p>
         </div>
         {% if g.user.is_league_manager == True %}
         <a class="action" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
@@ -29,14 +29,14 @@
             moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Round {{ nomination.Nomination.slot.round }}]
         </p>
         {% if nomination.Nomination.player.matcher_id %}
-        <p class="match">Match rights: <strong>{{ nomination.Nomination.player.matcher_user.username }}</strong></p>
+        <p class="match">Match rights: <strong>{{ nomination.Nomination.player.matcher_user.team_name }}</strong></p>
         {% endif %}
     </div>
 
     {% if g.user %}
     <div class="modifiable">
         <div>
-            <p class="bid"><strong>{{ g.user.username }}'s</strong> current bid: {% if nomination.Bid.value %}${% endif
+            <p class="bid"><strong>{{ g.user.team_name }}'s</strong> current bid: {% if nomination.Bid.value %}${% endif
                 %}{{ nomination.Bid.value }}</p>
         </div>
         <a class="action" href="{{ url_for('auction.bid', nomination_id=nomination.Nomination.id) }}">Bid</a>
@@ -52,8 +52,8 @@
         <div>
             <h3>{{ nomination.Nomination.player.name }} | {{nomination.Nomination.player.team }} | {{
                 nomination.Nomination.player.position.replace(",", ", ") }}</h3>
-            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{
-                nomination.Nomination.nominator_user.username }}</p>
+            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by the {{
+                nomination.Nomination.nominator_user.team_name }}</p>
         </div>
         {% if g.user.is_league_manager == True %}
         <a class="action" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
@@ -65,7 +65,7 @@
             moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Round {{ nomination.Nomination.slot.round }}]
         </p>
         {% if nomination.Nomination.player.matcher_id %}
-        <p class="match"><strong>{{ nomination.Nomination.player.matcher_user.username }}</strong> has 24 hours to match!</p>
+        <p class="match"><strong>{{ nomination.Nomination.player.matcher_user.team_name }}</strong> has 24 hours to match!</p>
         {% endif %}
     </div>
 
@@ -88,8 +88,8 @@
         <div>
             <h3>{{ nomination.Nomination.player.name }} | {{nomination.Nomination.player.team }} | {{
                 nomination.Nomination.player.position.replace(",", ", ") }}</h3>
-            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{
-                nomination.Nomination.nominator_user.username }}</p>
+            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by the {{
+                nomination.Nomination.nominator_user.team_name }}</p>
         </div>
         {% if g.user.is_league_manager == True %}
         <a class="action" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
@@ -104,10 +104,10 @@
 
     <div class="modifiable">
         <div>
-            <p class="sign"><strong>{{ nomination.Nomination.winner_user.username }}</strong> has won the auction
+            <p class="sign"><strong>{{ nomination.Nomination.player.manager_user.team_name }}</strong> has won the auction
                 with a bid of ${{ nomination.Nomination.bids[0].value }}!</p>
         </div>
-        {% if g.user.id == nomination.Nomination.winner_id %}
+        {% if g.user.id == nomination.Nomination.player.manager_id %}
         <a class="action" href="{{ url_for('auction.sign', player_id=nomination.Nomination.player.id) }}">Sign</a>
         {% endif %}
     </div>

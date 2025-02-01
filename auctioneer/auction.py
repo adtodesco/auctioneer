@@ -68,7 +68,7 @@ def index():
     closed_nominations = list()
 
     for row in result:
-        if row.Nomination.winner_id:
+        if row.Nomination.player.manager_id:
             closed_nominations.append(row)
         elif (
             row.Nomination.slot.closes_at < datetime.utcnow()
@@ -100,7 +100,7 @@ def nominate():
 
     statement = (
         db.select(Player)
-        .where(Player.status == "FA")
+        .where(Player.manager_id.is_(None))
         .where(~db.exists().where(Nomination.player_id == Player.id))
         .order_by(Player.name)
     )
@@ -147,7 +147,6 @@ def nominate():
                 player_id=player_id,
                 slot_id=slot_id,
                 nominator_id=g.user.id,
-                winner_id=None,
             )
             for user in users:
                 user_bid_value = bid_value if user.id == g.user.id else None
@@ -237,7 +236,7 @@ def match(nomination_id):
         if is_match:
             user_bid = get_user_bid_for_nomination(g.user.id, nomination.id)
             user_bid.value = nomination.bids[0].value
-            nomination.winner_id = g.user.id
+            nomination.player.manager_id = g.user.id
             db.session.add(user_bid)
             db.session.add(nomination)
             db.session.commit()
@@ -250,7 +249,7 @@ def match(nomination_id):
                 f"Match for nomination {nomination} declined by {g.user}."
             )
 
-        assign_nominated_player_to_team(nomination)
+        # assign_nominated_player_to_team(nomination)
         add_auction_won_notification(nomination)
 
         return redirect(url_for("auction.index"))
@@ -274,7 +273,7 @@ def edit(nomination_id):
         if action.lower() == "delete":
             if nomination.player.matcher_id:
                 remove_auction_match_notification(nomination)
-            if nomination.winner_id:
+            if nomination.player.manager_id:
                 unassign_nominated_player_to_team(nomination)
             nomination_str = str(nomination)
             db.session.delete(nomination)
@@ -291,21 +290,24 @@ def edit(nomination_id):
             else:
                 if nomination.player.matcher_id:
                     remove_auction_match_notification(nomination)
-                if nomination.winner_id and nomination.winner_id != winner_id:
+                if (
+                    nomination.player.matcher_id
+                    and nomination.player.manager_id != winner_id
+                ):
                     unassign_nominated_player_to_team(nomination)
                 nomination.slot_id = slot_id
-                nomination.winner_id = winner_id
+                nomination.player.manager_id = winner_id
                 db.session.add(nomination)
                 db.session.commit()
                 current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
                 if nomination.player.matcher_id:
                     # TODO: Only add if notification hasn't been sent yet
                     add_auction_match_notification(nomination, MATCH_TIME_HOURS)
-                if nomination.winner_id:
-                    assign_nominated_player_to_team(nomination)
+                # if nomination.player.manager_id:
+                #     assign_nominated_player_to_team(nomination)
                 return redirect(url_for("auction.index"))
 
-    users = db.session.execute(db.select(User)).scalars().all()
+    users = db.session.execute(db.select(User).order_by(User.team_name)).scalars().all()
     slots = get_open_slots().scalars().all()
     current_slot = db.session.get(Slot, nomination.slot_id)
     slots.append(current_slot)
@@ -381,9 +383,12 @@ def results():
         for row in rows:
             yield ",".join(row) + "\n"
 
-    # TODO: Order by slot.closes_at
     nominations = db.session.execute(
-        db.select(Nomination).where(Nomination.winner_id.is_not(None))
+        db.select(Nomination)
+        .join(Player, Nomination.player_id == Player.id)
+        .join(Slot, Nomination.slot_id == Slot.id)
+        .where(Player.manager_id.is_not(None))
+        .order_by(Slot.closes_at.asc())
     )
     results_headers = [
         "Fantrax ID",
@@ -401,7 +406,7 @@ def results():
             nomination.player.name,
             nomination.player.team,
             nomination.player.position.replace(",", ";"),
-            nomination.winner_user.username,
+            nomination.player.manager_user.team_name,
             str(nomination.player.salary),
             str(nomination.player.contract),
             ";".join([str(b.value) for b in nomination.bids]),
@@ -438,7 +443,7 @@ def close_nomination(nomination):
     else:
         winning_user = winning_users[0]
 
-    nomination.winner_id = winning_user.id
+    nomination.player.manager_id = winning_user.id
     db.session.add(nomination)
     db.session.commit()
 
@@ -450,7 +455,7 @@ def assign_nominated_player_to_team(nomination):
 
 
 def unassign_nominated_player_to_team(nomination):
-    nomination.player.status = "FA"
+    nomination.player.manager_id = None
     nomination.player.contract = None
     nomination.player.salary = None
     db.session.add(nomination)

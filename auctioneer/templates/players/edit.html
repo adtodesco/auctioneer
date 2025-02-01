@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Edit player{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+<h3>{{ player.name }} | {{ player.team }} | {{ player.position.replace(",", ", ") }}</h3>
+<form method="post">
+    <label for="status">Status</label>
+    <select name="manager_id" id="status">
+        {% if player.manager_id %}
+        <option value="" >Free Agent</option>
+        {% else %}
+        <option value="" selected>Free Agent</option>
+        {% endif %}
+        {% for user in users %}
+        {% if user.id == player.manager_id %}
+        <option value="{{ user.id }}" selected>{{ user.team_name }}</option>
+        {% else %}
+        <option value="{{ user.id }}">{{ user.team_name }}</option>
+        {% endif %}
+        {% endfor %}
+    </select>
+
+    <label for="matcher_id">Match rights</label>
+    <select name="matcher_id" id="matcher_id">
+        {% if player.matcher_id %}
+        <option value="" >None</option>
+        {% else %}
+        <option value="" selected>None</option>
+        {% endif %}
+        {% for user in users %}
+        {% if user.id == player.matcher_id %}
+        <option value="{{ user.id }}" selected>{{ user.team_name }}</option>
+        {% else %}
+        <option value="{{ user.id }}">{{ user.team_name }}</option>
+        {% endif %}
+        {% endfor %}
+    </select>
+
+    <div class="submit-buttons">
+        <input type="submit" value="Save">
+    </div>
+</form>
+{% endblock %}
