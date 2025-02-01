@@ -27,7 +27,7 @@ def get_open_slots(day_range=None):
     if day_range:
         statement = statement.where(
             Slot.closes_at.between(*day_range_to_times(day_range))
-        )
+        ).order_by(Slot.closes_at)
     slots = db.session.execute(statement)
 
     return slots

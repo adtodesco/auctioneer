@@ -14,17 +14,6 @@
         </option>
         {% endfor %}
     </select>
-    <label for="slot_id">Auction closes at</label>
-    <select name="slot_id" id="slot_id" required>
-        <option disabled selected value="">-- Select a date & time --</option>
-        {% for num, slots in rounds.items() %}
-        <optgroup label="Round {{ num }}">
-            {% for slot in slots %}
-            <option value="{{ slot.id }}">{{ slot.closes_at.strftime("%Y-%m-%d @ %-I:%M %p") }} ET</option>
-            {% endfor %}
-        </optgroup>
-        {% endfor %}
-    </select>
     <label for="bid_value">Enter bid below. Your bid will become the players total salary if you win this player's
         auction.</label>
     <input name="bid_value" id="bid_value" value="{{ request.form['bid_value'] }}" required>

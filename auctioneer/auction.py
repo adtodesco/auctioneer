@@ -114,21 +114,18 @@ def nominate():
         max_nominations_per_round=MAX_NOMINATIONS_PER_ROUND,
     )
     if not slots:
-        flash("No nomination slots currently available.")
-
-    rounds = group_slots_by_round(slots)
+        flash(
+            "You've already made all the nominations allowed for now. Try again later, or next round."
+        )
 
     if request.method == "POST":
         player_id = request.form["player_id"]
-        slot_id = request.form["slot_id"]
         bid_value = request.form["bid_value"]
 
         error = None
 
         if not player_id:
             error = "Player is required."
-        elif not slot_id:
-            error = "Auction closes at date & time is required."
         elif not bid_value:
             error = "Bid value is required."
 
@@ -143,6 +140,7 @@ def nominate():
         if error is not None:
             flash(error)
         else:
+            slot_id = slots[0].id
             nomination = Nomination(
                 player_id=player_id,
                 slot_id=slot_id,
@@ -166,16 +164,13 @@ def nominate():
 
             return redirect(url_for("auction.index"))
 
-    for slots in rounds.values():
-        convert_slots_timezone(slots, "UTC", "US/Eastern")
-
     return render_template(
         "auction/nominate.html",
         teams=TEAMS,
         positions=POSITIONS,
         users=users,
         players=players,
-        rounds=rounds,
+        round=slots[0].round,
     )
 
 
