@@ -38,38 +38,22 @@ def index():
 
 @bp.route("/<string:team>/")
 def roster(team):
-    # teams = (
-    #     db.session.execute(
-    #         db.select(Player.status)
-    #         .where(Player.status != "FA")
-    #         .order_by(Player.status)
-    #     )
-    #     .scalars()
-    #     .unique()
-    #     .all()
-    # )
-    # players = (
-    #     db.session.execute(
-    #         db.select(Player).where(Player.status == team.upper())
-    #         # .order_by(Player.contract)
-    #         .order_by(db.sql.expression.nullsfirst(db.sql.desc(Player.salary)))
-    #     )
-    #     .scalars()
-    #     .all()
-    # )
-
     user = db.session.execute(
         db.select(User).where(User.short_team_name == team.upper())
     ).scalar()
+
     players = (
         db.session.execute(
             db.select(Player)
             .join(User, Player.manager_id == User.id)
             .where(User.short_team_name == team.upper())
+            .order_by(db.sql.expression.nullsfirst(db.sql.desc(Player.salary)))
+            .order_by(Player.contract.desc())
         )
         .scalars()
         .all()
     )
+
     short_team_names = (
         db.session.execute(
             db.select(User.short_team_name).order_by(User.short_team_name)
