@@ -140,6 +140,9 @@ def nominate():
                 error = f"Minimum bid value is ${MINIMUM_BID_VALUE}."
 
         if error is not None:
+            current_app.logger.error(
+                f"User {g.user} could not nominate player because of error: {error}"
+            )
             flash(error)
         else:
             slot_id = slots[0].id
@@ -156,9 +159,7 @@ def nominate():
             db.session.add_all(users)
             db.session.commit()
 
-            current_app.logger.info(
-                f"Nomination {nomination} created by {nomination.nominator_user}."
-            )
+            current_app.logger.info(f"User {g.user} created nomination {nomination}")
 
             add_player_nominated_notification(nomination)
             if nomination.player.matcher_id:
@@ -209,12 +210,17 @@ def bid(nomination_id):
                 error = f"Minimum bid value is ${MINIMUM_BID_VALUE}."
 
         if error is not None:
+            current_app.logger.error(
+                f"User {g.user} could not bid on nomination {nomination} because of error: {error}"
+            )
             flash(error)
         else:
             user_bid.value = value
             db.session.add(user_bid)
             db.session.commit()
-            current_app.logger.info(f"Bid {user_bid} updated by {g.user}.")
+            current_app.logger.info(
+                f"User {g.user} updated bid on nomination {nomination}"
+            )
             return redirect(url_for("auction.index"))
 
     return render_template("auction/bid.html", nomination=nomination, bid=user_bid)
@@ -282,6 +288,9 @@ def edit(nomination_id):
                 error = "Auction closes at date & time is required."
 
             if error:
+                current_app.logger.error(
+                    f"User {g.user} could not update nomination {nomination} because of error: {error}"
+                )
                 flash(error)
             else:
                 if nomination.player.matcher_id:
@@ -299,8 +308,6 @@ def edit(nomination_id):
                 if nomination.player.matcher_id:
                     # TODO: Only add if notification hasn't been sent yet
                     add_auction_match_notification(nomination, MATCH_TIME_HOURS)
-                # if nomination.player.manager_id:
-                #     assign_nominated_player_to_team(nomination)
                 return redirect(url_for("auction.index"))
 
     users = db.session.execute(db.select(User).order_by(User.team_name)).scalars().all()
@@ -309,9 +316,6 @@ def edit(nomination_id):
     slots.append(current_slot)
     convert_slots_timezone(slots, "UTC", "US/Eastern")
     rounds = group_slots_by_round(slots)
-
-    # for slots in rounds.values():
-    #     convert_slots_timezone(slots, "UTC", "US/Eastern")
 
     return render_template(
         "auction/edit.html",
@@ -357,6 +361,9 @@ def sign(player_id):
             error = "Invalid contract option."
 
         if error is not None:
+            current_app.logger.error(
+                f"User {g.user} could not sign player because of error: {error}"
+            )
             flash(error)
         else:
             player.contract = contract

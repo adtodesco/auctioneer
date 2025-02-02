@@ -1,8 +1,6 @@
 import csv
 from datetime import datetime, timedelta
 
-from flask import current_app
-
 from . import db
 from .model import Bid, Nomination, Player, Slot, User
 
@@ -23,7 +21,6 @@ def get_open_slots(in_nomination_period_only=False):
         statement = statement.where(Slot.nomination_opens_at <= datetime.utcnow())
         statement = statement.where(Slot.nomination_closes_at >= datetime.utcnow())
     slots = db.session.execute(statement).scalars().all()
-    current_app.logger.info("open slots: %s", slots)
 
     return slots
 
