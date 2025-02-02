@@ -34,7 +34,7 @@ from .utils import (
     user_can_nominate,
 )
 
-bp = Blueprint("auction", __name__, url_prefix="/auction")
+bp = Blueprint("auction", __name__)
 
 # TODO: Add this to a configuration page
 MINIMUM_BID_VALUE = 11

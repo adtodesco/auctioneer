@@ -49,10 +49,6 @@ def create_app(test_config=None):
     with app.app_context():
         db.create_all()
 
-    from . import home
-
-    app.register_blueprint(home.bp)
-
     from . import auth
 
     app.register_blueprint(auth.bp)
@@ -76,6 +72,10 @@ def create_app(test_config=None):
     from . import tiebreaker
 
     app.register_blueprint(tiebreaker.bp)
+
+    from . import overview
+
+    app.register_blueprint(overview.bp)
 
     from . import static
 

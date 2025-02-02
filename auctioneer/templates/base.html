@@ -20,12 +20,13 @@
 </head>
 <nav>
     <img src="{{ url_for('static', filename='hammer.png') }}" width="30" height="30">
-    <h1><a href="{{ url_for('home.index') }}">The DOO Auction</a></h1>
+    <h1><a href="{{ url_for('auction.index') }}">The DOO Auction</a></h1>
     <div>
         <ul>
             <li><a class="action" href="{{ url_for('auction.index') }}">Auction</a></li>
             <li><a class="action" href="{{ url_for('rosters.index') }}">Rosters</a></li>
             <li><a class="action" href="{{ url_for('tiebreaker.index') }}">Tiebreaker Order</a></li>
+            <li><a class="action" href="{{ url_for('overview.index') }}">Free Agency Overview</a></li>
             {% if g.user.is_league_manager == True %}
             <li><a class="action" href="{{ url_for('admin.index') }}">League Manager</a></li>
             {% endif %}
