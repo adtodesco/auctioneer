@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Manage slots{% endblock %}</h1>
+<h1>{% block title %}Auction rounds{% endblock %}</h1>
 <a class="action" href="{{ url_for('admin.slots.create') }}">Create a round</a>
 {% endblock %}
 
@@ -12,9 +12,10 @@
     <h3>Round {{ round }}</h3>
     <a class="action" href="{{ url_for('admin.slots.edit', round=round) }}">Edit</a>
 </div>
+<div>Nomination period: <strong>{{ moment(slots[0].nomination_opens_at).format('LLLL') }}</strong> until <strong>{{ moment(slots[0].nomination_closes_at).format('LLLL') }}</strong></div>
 <ul>
     {% for slot in slots %}
-    <li>{{ moment(slot.closes_at).format('LLL') }}</li>
+    <li>{{ moment(slot.closes_at).format('LLLL') }}</li>
     {% endfor %}
 </ul>
 {% endfor %}

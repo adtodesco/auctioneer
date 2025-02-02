@@ -1,15 +1,10 @@
 import csv
 from datetime import datetime, timedelta
 
+from flask import current_app
+
 from . import db
 from .model import Bid, Nomination, Player, Slot, User
-
-
-def day_range_to_times(day_range):
-    dt_format = "%Y-%m-%d %H:%M:%S"
-    start = datetime.utcnow() + timedelta(days=day_range[1])
-    end = datetime.utcnow() + timedelta(days=day_range[0])
-    return start.strftime(dt_format), end.strftime(dt_format)
 
 
 def get_user_bid_for_nomination(user_id, nomination_id):
@@ -22,43 +17,34 @@ def get_user_bid_for_nomination(user_id, nomination_id):
     return bid
 
 
-def get_open_slots(day_range=None):
+def get_open_slots(in_nomination_period_only=False):
     statement = db.select(Slot).where(~db.exists().where(Nomination.slot_id == Slot.id))
-    if day_range:
-        statement = statement.where(
-            Slot.closes_at.between(*day_range_to_times(day_range))
-        ).order_by(Slot.closes_at)
-    slots = db.session.execute(statement)
+    if in_nomination_period_only:
+        statement = statement.where(Slot.nomination_opens_at <= datetime.utcnow())
+        statement = statement.where(Slot.nomination_closes_at >= datetime.utcnow())
+    slots = db.session.execute(statement).scalars().all()
+    current_app.logger.info("open slots: %s", slots)
 
     return slots
 
 
-def get_open_slots_for_user(user_id, day_range=None, max_nominations_per_round=None):
-    slots = get_open_slots(day_range)
+def user_can_nominate(user, slot):
+    statement = (
+        db.select(Slot.round, db.func.count("*"))
+        .select_from(Nomination)
+        .join(Slot)
+        .where(Nomination.nominator_id == user.id)
+    ).group_by(Slot.round)
 
-    if max_nominations_per_round:
-        statement = (
-            db.select(Slot.round, db.func.count("*"))
-            .select_from(Nomination)
-            .join(Slot)
-            .where(Nomination.nominator_id == user_id)
-        )
-        statement = statement.group_by(Slot.round)
+    user_nominations = db.session.execute(statement)
+    user_nominations_per_round = {n.round: int(n.count) for n in user_nominations}
 
-        user_nominations = db.session.execute(statement)
-        user_nominations_per_round = {n.round: int(n.count) for n in user_nominations}
+    nominations_count = user_nominations_per_round.get(slot.round, 0)
+    time_left = slot.closes_at - datetime.utcnow()
 
-        filtered_slots = list()
-        for slot in slots.scalars():
-            if (
-                user_nominations_per_round.get(slot.round, 0)
-                < max_nominations_per_round
-            ):
-                filtered_slots.append(slot)
-
-        slots = filtered_slots
-
-    return slots
+    return nominations_count < 2 or (
+        nominations_count < 3 and time_left < timedelta(hours=24)
+    )
 
 
 def group_slots_by_round(slots):

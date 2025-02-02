@@ -5,8 +5,8 @@ import click
 from flask import current_app
 
 from . import db
-from .auction import assign_nominated_player_to_team, close_nomination
-from .model import Nomination, Notification, Slot
+from .auction import close_nomination
+from .model import Nomination, Notification, Player, Slot
 from .slack import add_auction_won_notification, send_notification
 from .utils import players_from_fantrax_export, users_from_file
 
@@ -51,22 +51,16 @@ def close_nominations():
     statement = (
         db.select(Nomination)
         .join(Slot)
-        .where(Nomination.player.manager_id.is_(None))
+        .join(Player, Nomination.player_id == Player.id)
+        .where(Player.manager_id.is_(None))
         .where(
-            (
-                Nomination.player.matcher_id.is_(None)
-                & (current_datetime > Slot.closes_at)
-            )
-            | (
-                Nomination.player.matcher_id.is_not(None)
-                & (match_datetime > Slot.closes_at)
-            )
+            (Player.matcher_id.is_(None) & (current_datetime > Slot.closes_at))
+            | (Player.matcher_id.is_not(None) & (match_datetime > Slot.closes_at))
         )
     )
     nominations = db.session.execute(statement).scalars().all()
     for nomination in nominations:
         close_nomination(nomination)
-        # assign_nominated_player_to_team(nomination)
         add_auction_won_notification(nomination)
 
     return nominations

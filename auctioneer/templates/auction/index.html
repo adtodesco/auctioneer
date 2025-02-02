@@ -10,6 +10,9 @@
 
 {% block content %}
 <hr>
+{% if not open_nominations and not match_nominations and not closed_nominations %}
+<p><i>No nominations, yet...</i></p>
+{% else %}
 {% for nomination in open_nominations %}
 <div class="nomination opened">
     <div class="modifiable">
@@ -112,4 +115,5 @@
 </div>
 <hr>
 {% endfor %}
+{% endif %}
 {% endblock %}

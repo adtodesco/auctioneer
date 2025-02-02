@@ -48,6 +48,8 @@ class Slot(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     round = db.Column(db.Integer)
     closes_at = db.Column(db.DateTime, nullable=False)
+    nomination_opens_at = db.Column(db.DateTime, nullable=False)
+    nomination_closes_at = db.Column(db.DateTime, nullable=False)
 
     # One-to-one relationships
     nomination = db.relationship("Nomination", back_populates="slot")
@@ -64,14 +66,12 @@ class Nomination(db.Model):
         db.Integer, db.ForeignKey("slot.id"), unique=True, nullable=False
     )
     nominator_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    # winner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
 
     # One-to-one relationships
     player = db.relationship("Player", back_populates="nomination")
     slot = db.relationship("Slot", back_populates="nomination")
     nominator_user = db.relationship("User", foreign_keys=nominator_id)
-    # winner_user = db.relationship("User", foreign_keys=winner_id)
 
     # One-to-many relationships
     bids = db.relationship(

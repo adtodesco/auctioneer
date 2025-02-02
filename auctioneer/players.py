@@ -32,8 +32,6 @@ def edit(player_id):
         manager_id = request.form["manager_id"] or None
         matcher_id = request.form["matcher_id"] or None
 
-        print(manager_id, matcher_id)
-
         error = None
 
         user_ids = [str(user.id) for user in users]

@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 
+import pytz
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from auctioneer.auction import NOMINATION_DAY_RANGE, convert_slots_timezone
 from auctioneer.slack import (
     add_auctions_close_notification,
     add_nomination_period_begun_notification,
@@ -35,8 +35,12 @@ def index():
 def create():
     if request.method == "POST":
         round_num = request.form["round_num"]
-        start_date = request.form["start_date"]
-        start_time = request.form["start_time"]
+        round_start_date = request.form["round_start_date"]
+        round_start_time = request.form["round_start_time"]
+        nomination_opens_at_date = request.form["nomination_opens_at_date"]
+        nomination_opens_at_time = request.form["nomination_opens_at_time"]
+        nomination_closes_at_date = request.form["nomination_closes_at_date"]
+        nomination_closes_at_time = request.form["nomination_closes_at_time"]
         num_slots = request.form["num_slots"]
         slot_timedelta = request.form["slot_timedelta"]
 
@@ -44,10 +48,18 @@ def create():
 
         if not round_num:
             error = "Round number is required."
-        elif not start_date:
-            error = "Start date is required."
-        elif not start_time:
-            error = "Start time is required."
+        elif not round_start_date:
+            error = "Round start date is required."
+        elif not round_start_time:
+            error = "Round start time is required."
+        elif not nomination_opens_at_date:
+            error = "Nomination period open date is required."
+        elif not nomination_opens_at_time:
+            error = "Nomination period open time is required."
+        elif not nomination_closes_at_date:
+            error = "Nomination period close date is required."
+        elif not nomination_closes_at_time:
+            error = "Nomination period close time is required."
         elif not num_slots:
             error = "Number of slots is required."
         elif not slot_timedelta:
@@ -73,35 +85,53 @@ def create():
         if error:
             flash(error)
         else:
-            slots = list()
+            utc = pytz.utc
+            eastern = pytz.timezone("US/Eastern")
 
-            closes_at = start_date + " " + start_time
-            closes_at = datetime.strptime(closes_at, "%Y-%m-%d %H:%M")
+            nomination_opens_at = datetime.strptime(
+                nomination_opens_at_date + " " + nomination_opens_at_time,
+                "%Y-%m-%d %H:%M",
+            )
+            nomination_opens_at = eastern.localize(nomination_opens_at)
+            nomination_opens_at = nomination_opens_at.astimezone(utc)
+
+            nomination_closes_at = datetime.strptime(
+                nomination_closes_at_date + " " + nomination_closes_at_time,
+                "%Y-%m-%d %H:%M",
+            )
+            nomination_closes_at = eastern.localize(nomination_closes_at)
+            nomination_closes_at = nomination_closes_at.astimezone(utc)
+
+            closes_at = datetime.strptime(
+                round_start_date + " " + round_start_time,
+                "%Y-%m-%d %H:%M",
+            )
+            closes_at = eastern.localize(closes_at)
+            closes_at = closes_at.astimezone(utc)
+
             slot_timedelta = timedelta(minutes=slot_timedelta)
 
+            slots = list()
             for _ in range(num_slots):
-                slots.append(Slot(round=round_num, closes_at=closes_at))
+                slots.append(
+                    Slot(
+                        round=round_num,
+                        nomination_opens_at=nomination_opens_at,
+                        nomination_closes_at=nomination_closes_at,
+                        closes_at=closes_at,
+                    )
+                )
                 closes_at += slot_timedelta
-
-            convert_slots_timezone(slots, from_tz="US/Eastern", to_tz="UTC")
 
             db.session.add_all(slots)
             db.session.commit()
 
-            nominations_open_at = (
-                slots[-1].closes_at
-                - timedelta(days=NOMINATION_DAY_RANGE[0])
-                + timedelta(minutes=1)
-            )
-            nominations_close_at = slots[0].closes_at - timedelta(
-                days=NOMINATION_DAY_RANGE[1]
-            )
             add_nomination_period_begun_notification(
                 round_num,
-                nominations_open_at,
-                nominations_close_at,
+                nomination_opens_at,
+                nomination_closes_at,
             )
-            add_nomination_period_end_notification(round_num, nominations_close_at)
+            add_nomination_period_end_notification(round_num, nomination_closes_at)
             add_auctions_close_notification(round_num, slots[0].closes_at)
 
             return redirect(url_for("admin.slots.index"))

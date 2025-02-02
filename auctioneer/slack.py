@@ -9,21 +9,23 @@ from .model import Notification
 
 
 def add_nomination_period_begun_notification(
-    round_number, round_opens_at, round_closes_at
+    round_number, nominations_open_at, nominations_close_at
 ):
-    round_closes_at = round_closes_at.replace(tzinfo=pytz.utc)
-    round_closes_at_et = round_closes_at.astimezone(pytz.timezone("US/Eastern"))
+    nominations_close_at = nominations_close_at.replace(tzinfo=pytz.utc)
+    nominations_close_at_et = nominations_close_at.astimezone(
+        pytz.timezone("US/Eastern")
+    )
 
     notification = Notification(
         title=(
             f":incoming_envelope:  *Round {round_number} nomination period has begun!* "
         ),
         message=(
-            f"The round {round_number} nomination period has begun and will last until "
-            f"{round_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET. Head to "
+            f"Round {round_number} nomination period has begun and will last until "
+            f"{nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET. Head to "
             f"thedooauction.com to make nominations in this round!"
         ),
-        send_at=round_opens_at,
+        send_at=nominations_open_at,
     )
 
     db.session.add(notification)
@@ -40,10 +42,12 @@ def remove_nomination_period_begun_notification(round_number):
 
 
 def add_nomination_period_end_notification(
-    round_number, round_closes_at, alert_hours=2
+    round_number, nominations_close_at, alert_hours=2
 ):
-    round_closes_at = round_closes_at.replace(tzinfo=pytz.utc)
-    round_closes_at_et = round_closes_at.astimezone(pytz.timezone("US/Eastern"))
+    nominations_close_at = nominations_close_at.replace(tzinfo=pytz.utc)
+    nominations_close_at_et = nominations_close_at.astimezone(
+        pytz.timezone("US/Eastern")
+    )
 
     notification = Notification(
         title=(
@@ -51,12 +55,12 @@ def add_nomination_period_end_notification(
             f" hours!*"
         ),
         message=(
-            f"The round {round_number} nomination period will start ending in "
+            f"Round {round_number} nomination period ends in "
             f"{alert_hours} hours. If you have not made your round {round_number} "
-            f"nominations head to thedooauction.com to make your nominations by "
-            f"{round_closes_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET."
+            f"nominations head to thedooauction.com to make them by "
+            f"{nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET."
         ),
-        send_at=round_closes_at - timedelta(hours=alert_hours),
+        send_at=nominations_close_at - timedelta(hours=alert_hours),
     )
 
     db.session.add(notification)
@@ -194,4 +198,7 @@ def send_notification(notification, webhook_url):
         db.session.commit()
         return True
     else:
+        current_app.logger.error(
+            f"Failed to send notification {notification} with response {response}."
+        )
         return False

@@ -29,18 +29,16 @@ from .slack import (
 )
 from .utils import (
     get_open_slots,
-    get_open_slots_for_user,
     get_user_bid_for_nomination,
     group_slots_by_round,
+    user_can_nominate,
 )
 
 bp = Blueprint("auction", __name__, url_prefix="/auction")
 
 # TODO: Add this to a configuration page
 MINIMUM_BID_VALUE = 11
-MAX_NOMINATIONS_PER_ROUND = 28
 MATCH_TIME_HOURS = 24
-NOMINATION_DAY_RANGE = (7, 4)
 MINIMUM_TOTAL_SALARY = {
     2024: 11,
     2025: 28,
@@ -106,17 +104,17 @@ def nominate():
     )
     players = db.session.execute(statement).scalars().all()
     if not players:
-        flash("No available players remaining.")
+        flash("No available players remaining to nominate.")
 
-    slots = get_open_slots_for_user(
-        g.user.id,
-        day_range=NOMINATION_DAY_RANGE,
-        max_nominations_per_round=MAX_NOMINATIONS_PER_ROUND,
+    no_slots_message = (
+        "Nominations are unavailable because we are outside of the nomination periods or we have reached the max number"
+        " of nominations for this round."
     )
+    max_nominations_reached_message = "Nominations are unavailable because you have reached the max number of nominations for this round."
+
+    slots = get_open_slots(in_nomination_period_only=True)
     if not slots:
-        flash(
-            "You've already made all the nominations allowed for now. Try again later, or next round."
-        )
+        flash(no_slots_message)
 
     if request.method == "POST":
         player_id = request.form["player_id"]
@@ -124,7 +122,11 @@ def nominate():
 
         error = None
 
-        if not player_id:
+        if not slots:
+            error = no_slots_message
+        elif not user_can_nominate(g.user, slots[0]):
+            error = max_nominations_reached_message
+        elif not player_id:
             error = "Player is required."
         elif not bid_value:
             error = "Bid value is required."
@@ -170,7 +172,6 @@ def nominate():
         positions=POSITIONS,
         users=users,
         players=players,
-        round=slots[0].round,
     )
 
 
@@ -303,13 +304,14 @@ def edit(nomination_id):
                 return redirect(url_for("auction.index"))
 
     users = db.session.execute(db.select(User).order_by(User.team_name)).scalars().all()
-    slots = get_open_slots().scalars().all()
+    slots = get_open_slots()
     current_slot = db.session.get(Slot, nomination.slot_id)
     slots.append(current_slot)
+    convert_slots_timezone(slots, "UTC", "US/Eastern")
     rounds = group_slots_by_round(slots)
 
-    for slots in rounds.values():
-        convert_slots_timezone(slots, "UTC", "US/Eastern")
+    # for slots in rounds.values():
+    #     convert_slots_timezone(slots, "UTC", "US/Eastern")
 
     return render_template(
         "auction/edit.html",
@@ -462,6 +464,16 @@ def convert_slots_timezone(slots, from_tz, to_tz):
         slot.closes_at = (
             pytz.timezone(from_tz)
             .localize(slot.closes_at)
+            .astimezone(pytz.timezone(to_tz))
+        )
+        slot.nomination_opens_at = (
+            pytz.timezone(from_tz)
+            .localize(slot.nomination_opens_at)
+            .astimezone(pytz.timezone(to_tz))
+        )
+        slot.nomination_closes_at = (
+            pytz.timezone(from_tz)
+            .localize(slot.nomination_closes_at)
             .astimezone(pytz.timezone(to_tz))
         )
 

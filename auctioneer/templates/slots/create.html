@@ -1,21 +1,30 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Create a round{% endblock %}</h1>
+<h1>{% block title %}Create round{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+<hr>
 <form method="post">
     <label for="round_num">Round number</label>
     <input name="round_num" id="round_num" type="number" required>
-    <label for="start_date">Round start date</label>
-    <input name="start_date" id="start_date" type="date" required>
-    <label for="start_time">Round start time (ET)</label>
-    <input name="start_time" id="start_time" type="time" required>
-    <label for="num_slots">Number of slots</label>
+    <label for="num_slots">Number of auction slots</label>
     <input name="num_slots" id="num_slots" type="number" required>
-    <label for="slot_timedelta">Time between slots (in minutes)</label>
+    <label for="slot_timedelta">Time between auction slots (in minutes)</label>
     <input name="slot_timedelta" id="slot_timedelta" type="number" required>
+    <label for="nomination_opens_at_date">Nomination period open date</label>
+    <input name="nomination_opens_at_date" id="nomination_opens_at_date" type="date" required>
+    <label for="nomination_opens_at_time">Nomination period open time (ET)</label>
+    <input name="nomination_opens_at_time" id="nomination_opens_at_time" type="time" required>
+    <label for="nomination_closes_at_date">Nomination period close date</label>
+    <input name="nomination_closes_at_date" id="nomination_closes_at_date" type="date" required>
+    <label for="nomination_closes_at_time">Nomination period close time (ET)</label>
+    <input name="nomination_closes_at_time" id="nomination_closes_at_time" type="time" required>
+    <label for="round_start_date">Round start date</label>
+    <input name="round_start_date" id="round_start_date" type="date" required>
+    <label for="round_start_time">Round start time (ET)</label>
+    <input name="round_start_time" id="round_start_time" type="time" required>
     <input type="submit" value="Submit">
 </form>
 {% endblock %}

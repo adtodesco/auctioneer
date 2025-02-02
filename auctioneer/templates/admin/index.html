@@ -8,16 +8,16 @@
 <hr>
 <table>
     <tr>
-        <th>Action</th>
+        <th>Tool</th>
         <th>Description</th>
     </tr>
     <tr>
-        <td><a class="action" href="{{ url_for('admin.slots.index') }}">Edit slots</a></td>
-        <td>Add, remove or edit auction slots.</td>
+        <td><a class="action" href="{{ url_for('admin.slots.index') }}">Auction rounds</a></td>
+        <td>Add, remove or rename auction rounds.</td>
     </tr>
     <tr>
-        <td><a class="action" href="{{ url_for('admin.players.index') }}">Edit players</a></td>
-        <td>Edit players status and match rights.</td>
+        <td><a class="action" href="{{ url_for('admin.players.index') }}">Player pool</a></td>
+        <td>Edit player's status and match rights.</td>
     </tr>
 </table>
 {% endblock %}
