@@ -37,7 +37,7 @@ def user_can_nominate(user, slot):
     user_nominations_per_round = {n.round: int(n.count) for n in user_nominations}
 
     nominations_count = user_nominations_per_round.get(slot.round, 0)
-    time_left = slot.closes_at - datetime.utcnow()
+    time_left = slot.nomination_closes_at - datetime.utcnow()
 
     return nominations_count < 2 or (
         nominations_count < 3 and time_left < timedelta(hours=24)
