@@ -396,6 +396,7 @@ def results():
     )
     results_headers = [
         "Fantrax ID",
+        "Round",
         "Player",
         "Team",
         "Position",
@@ -407,6 +408,7 @@ def results():
     results_rows = [
         [
             nomination.player.fantrax_id,
+            str(nomination.slot.round),
             nomination.player.name,
             nomination.player.team,
             nomination.player.position.replace(",", ";"),
