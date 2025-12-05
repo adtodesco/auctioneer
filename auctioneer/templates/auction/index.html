@@ -19,7 +19,7 @@
         <div>
             <h3>{{ nomination.Nomination.player.name }} | {{nomination.Nomination.player.team }} | {{
                 nomination.Nomination.player.position.replace(",", ", ") }}</h3>
-            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by the {{
+            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{
                 nomination.Nomination.nominator_user.team_name }}</p>
         </div>
         {% if g.user.is_league_manager == True %}
