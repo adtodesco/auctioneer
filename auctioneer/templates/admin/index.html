@@ -6,18 +6,38 @@
 
 {% block content %}
 <hr>
-<table>
-    <tr>
-        <th>Tool</th>
-        <th>Description</th>
-    </tr>
-    <tr>
-        <td><a class="action" href="{{ url_for('admin.slots.index') }}">Auction rounds</a></td>
-        <td>Add, remove or rename auction rounds.</td>
-    </tr>
-    <tr>
-        <td><a class="action" href="{{ url_for('admin.players.index') }}">Player pool</a></td>
-        <td>Edit player's status and match rights.</td>
-    </tr>
+<table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Tool</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;"><a class="action" href="{{ url_for('admin.audit_log.index') }}">Audit Log</a></td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">View system activity and changes (with sensitive data controls).</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;"><a class="action" href="{{ url_for('admin.slots.index') }}">Auction rounds</a></td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Add, remove or rename auction rounds.</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;"><a class="action" href="{{ url_for('admin.config.index') }}">Configuration</a></td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Manage season settings (salary caps, minimums, etc.).</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;"><a class="action" href="{{ url_for('admin.players.import_players') }}">Import players</a></td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Upload CSV file to replace all players in the pool.</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;"><a class="action" href="{{ url_for('admin.players.index') }}">Player pool</a></td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Edit player's status and match rights.</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;"><a class="action" href="{{ url_for('admin.users.index') }}">User management</a></td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Manage teams and league manager access.</td>
+        </tr>
+    </tbody>
 </table>
 {% endblock %}

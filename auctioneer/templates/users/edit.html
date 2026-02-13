@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Edit User: {{ user.team_name }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row {
+        margin-bottom: 1em;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .form-row input[type="text"],
+    .form-row input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        max-width: 400px;
+    }
+    .submit-section {
+        margin-top: 2em;
+        padding-top: 1em;
+        border-top: 1px solid #ddd;
+    }
+    .info-box {
+        margin-top: 1.5em;
+        padding: 1em;
+        background: #f0f0f0;
+        border-left: 4px solid #999;
+    }
+    .warning-box {
+        margin-top: 1.5em;
+        padding: 1em;
+        background: #fff8dc;
+        border-left: 4px solid #f0ad4e;
+    }
+</style>
+
+<form method="post">
+    <!-- Team Information -->
+    <div class="form-section">
+        <h3>Team Information</h3>
+        <p>Basic team details and identifiers</p>
+
+        <div class="form-row">
+            <label for="team_name">Team Name</label>
+            <input name="team_name" id="team_name" type="text" value="{{ user.team_name }}" required>
+        </div>
+
+        <div class="form-row">
+            <label for="short_team_name">Short Team Name</label>
+            <input name="short_team_name" id="short_team_name" type="text" value="{{ user.short_team_name }}" required maxlength="10">
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Used for compact displays (max 10 characters)
+            </small>
+        </div>
+
+        <div class="form-row">
+            <label for="tiebreaker_order">Tiebreaker Order</label>
+            <input name="tiebreaker_order" id="tiebreaker_order" type="number" value="{{ user.tiebreaker_order }}" required min="1">
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Used to resolve tied bids (lower number wins)
+            </small>
+        </div>
+    </div>
+
+    <!-- Integration Settings -->
+    <div class="form-section">
+        <h3>Integration Settings</h3>
+        <p>External service identifiers for notifications</p>
+
+        <div class="form-row">
+            <label for="slack_id">Slack User ID</label>
+            <input name="slack_id" id="slack_id" type="text" value="{{ user.slack_id or '' }}">
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Used for @mentions in Slack notifications
+            </small>
+        </div>
+
+        <div class="form-row">
+            <label for="discord_id">Discord User ID</label>
+            <input name="discord_id" id="discord_id" type="text" value="{{ user.discord_id or '' }}">
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Used for @mentions in Discord notifications (numeric ID)
+            </small>
+        </div>
+    </div>
+
+    <!-- Admin Access -->
+    <div class="form-section">
+        <h3>Admin Access</h3>
+        <p>Grant or revoke administrative privileges</p>
+
+        <div class="form-row">
+            <label for="is_league_manager">
+                <input type="checkbox" name="is_league_manager" id="is_league_manager" {% if user.is_league_manager %}checked{% endif %}>
+                <strong>League Manager (Full Admin Access)</strong>
+            </label>
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Allows access to all admin tools, configuration, and audit logs
+            </small>
+        </div>
+    </div>
+
+    <div class="submit-section">
+        <input type="submit" value="Save Changes">
+        <a href="{{ url_for('admin.users.index') }}" style="margin-left: 1em;">Cancel</a>
+    </div>
+</form>
+
+{% if user.is_league_manager %}
+<div class="warning-box">
+    <strong>⚠️ Warning:</strong> This user has full admin privileges, including the ability to modify all settings, view audit logs, and manage other users.
+</div>
+{% endif %}
+
+{% if user.username %}
+<div class="info-box">
+    <strong>Login Status:</strong> Registered<br>
+    <strong>Username:</strong> <code>{{ user.username }}</code><br>
+    <small style="color: #666;">Password management not available through this interface</small>
+</div>
+{% else %}
+<div class="info-box">
+    <strong>Login Status:</strong> Not yet registered<br>
+    <small style="color: #666;">User can claim this team at <a href="{{ url_for('auth.register') }}">/auth/register</a></small>
+</div>
+{% endif %}
+{% endblock %}

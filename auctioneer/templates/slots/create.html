@@ -1,30 +1,129 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Create round{% endblock %}</h1>
+<h1>{% block title %}Create Auction Round{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row {
+        display: flex;
+        gap: 1em;
+        align-items: flex-start;
+        margin-bottom: 1em;
+    }
+    .form-field {
+        flex: 1;
+    }
+    .form-field.small {
+        flex: 0 0 150px;
+    }
+    .form-field label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .form-field input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .submit-section {
+        margin-top: 2em;
+        padding-top: 1em;
+        border-top: 1px solid #ddd;
+    }
+</style>
+
 <form method="post">
-    <label for="round_num">Round number</label>
-    <input name="round_num" id="round_num" type="number" required>
-    <label for="num_slots">Number of auction slots</label>
-    <input name="num_slots" id="num_slots" type="number" required>
-    <label for="slot_timedelta">Time between auction slots (in minutes)</label>
-    <input name="slot_timedelta" id="slot_timedelta" type="number" required>
-    <label for="nomination_opens_at_date">Nomination period open date</label>
-    <input name="nomination_opens_at_date" id="nomination_opens_at_date" type="date" required>
-    <label for="nomination_opens_at_time">Nomination period open time (ET)</label>
-    <input name="nomination_opens_at_time" id="nomination_opens_at_time" type="time" required>
-    <label for="nomination_closes_at_date">Nomination period close date</label>
-    <input name="nomination_closes_at_date" id="nomination_closes_at_date" type="date" required>
-    <label for="nomination_closes_at_time">Nomination period close time (ET)</label>
-    <input name="nomination_closes_at_time" id="nomination_closes_at_time" type="time" required>
-    <label for="round_start_date">Round start date</label>
-    <input name="round_start_date" id="round_start_date" type="date" required>
-    <label for="round_start_time">Round start time (ET)</label>
-    <input name="round_start_time" id="round_start_time" type="time" required>
-    <input type="submit" value="Submit">
+    <!-- Round Information -->
+    <div class="form-section">
+        <h3>Round Information</h3>
+        <p>Basic information about this auction round</p>
+
+        <div class="form-row">
+            <div class="form-field small">
+                <label for="round_num">Round Number</label>
+                <input name="round_num" id="round_num" type="number" min="1" required>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nomination Period -->
+    <div class="form-section">
+        <h3>Nomination Period</h3>
+        <p>When managers can nominate players for this round</p>
+
+        <div class="form-row">
+            <div class="form-field">
+                <label for="nomination_opens_at_date">Opens (ET)</label>
+                <div style="display: flex; gap: 0.5em;">
+                    <input name="nomination_opens_at_date" id="nomination_opens_at_date" type="date" required style="flex: 1;">
+                    <input name="nomination_opens_at_time" id="nomination_opens_at_time" type="time" required style="flex: 0 0 120px;">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-field">
+                <label for="nomination_closes_at_date">Closes (ET)</label>
+                <div style="display: flex; gap: 0.5em;">
+                    <input name="nomination_closes_at_date" id="nomination_closes_at_date" type="date" required style="flex: 1;">
+                    <input name="nomination_closes_at_time" id="nomination_closes_at_time" type="time" required style="flex: 0 0 120px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auction Period -->
+    <div class="form-section">
+        <h3>Auction Period</h3>
+        <p>When auctions run and how they're spaced</p>
+
+        <div class="form-row">
+            <div class="form-field">
+                <label for="round_start_date">First Auction Starts (ET)</label>
+                <div style="display: flex; gap: 0.5em;">
+                    <input name="round_start_date" id="round_start_date" type="date" required style="flex: 1;">
+                    <input name="round_start_time" id="round_start_time" type="time" required style="flex: 0 0 120px;">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-field small">
+                <label for="num_slots">Number of Slots</label>
+                <input name="num_slots" id="num_slots" type="number" min="1" value="10" required>
+            </div>
+
+            <div class="form-field small">
+                <label for="slot_timedelta">Spacing (minutes)</label>
+                <input name="slot_timedelta" id="slot_timedelta" type="number" min="1" value="5" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="submit-section">
+        <input type="submit" value="Create Round">
+        <a href="{{ url_for('admin.slots.index') }}" style="margin-left: 1em;">Cancel</a>
+    </div>
 </form>
 {% endblock %}

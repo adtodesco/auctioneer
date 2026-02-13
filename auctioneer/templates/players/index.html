@@ -2,31 +2,39 @@
 
 {% block header %}
 <h1>{% block title %}Player pool{% endblock %}</h1>
+<a class="action" href="{{ url_for('admin.players.import_players') }}">Import Players</a>
 {% endblock %}
 
 {% block content %}
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Team</th>
-            <th>Position</th>
-            <th>Status</th>
-            <th>Match Rights</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
+<div style="height: calc(100vh - 200px); overflow-y: auto; border: 1px solid #ddd;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Name</th>
+                <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Team</th>
+                <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Position</th>
+                <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Status</th>
+                <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Match Rights</th>
+                <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Actions</th>
+            </tr>
+        </thead>
     <tbody id="playerTableBody">
         {% for player in players %}
         <tr>
-            <td>{{ player.name }}</td>
-            <td>{{ player.team }}</td>
-            <td>{{ player.position }}</td>
-            <td>{{ player.manager_user.short_team_name or "FA" }}</td>
-            <td>{{ player.matcher_user.short_team_name or "--" }}</td>
-            <td><a class="action" href="{{ url_for('admin.players.edit', player_id=player.id) }}">Edit</a></td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player.name }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player.team }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player.position }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player.manager_user.short_team_name or "FA" }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player.matcher_user.short_team_name or "--" }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">
+                <a class="action" href="{{ url_for('admin.players.edit', player_id=player.id) }}">Edit</a>
+                {% if player.manager_id and not player.contract %}
+                | <a class="action" href="{{ url_for('auction.admin_sign', player_id=player.id) }}">Admin Sign</a>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>
-</table>
+    </table>
+</div>
 {% endblock %}

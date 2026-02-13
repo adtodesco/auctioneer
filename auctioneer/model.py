@@ -10,7 +10,8 @@ class User(db.Model):
     team_name = db.Column(db.String, nullable=False)
     short_team_name = db.Column(db.String, nullable=False)
     tiebreaker_order = db.Column(db.Integer, unique=True)
-    slack_id = db.Column(db.String, nullable=False)
+    slack_id = db.Column(db.String)
+    discord_id = db.Column(db.String)
     is_league_manager = db.Column(db.Boolean, nullable=False, default=False)
 
     # One-to-many relationships
@@ -35,6 +36,7 @@ class Player(db.Model):
     contract = db.Column(db.Integer, default=None)
     manager_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     matcher_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    hometown_discount = db.Column(db.Boolean, default=False, nullable=False)
 
     # One-to-one relationships
     nomination = db.relationship("Nomination", back_populates="player")
@@ -116,3 +118,32 @@ class Notification(db.Model):
     message = db.Column(db.String)
     send_at = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+
+
+class Config(db.Model):
+    __tablename__ = "config"
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String, unique=True, nullable=False, index=True)
+    value = db.Column(db.String, nullable=False)
+    description = db.Column(db.String)
+    value_type = db.Column(db.String, nullable=False)  # 'int', 'float', 'json'
+
+
+class AuditLog(db.Model):
+    __tablename__ = "audit_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    action = db.Column(db.String, nullable=False)  # 'create', 'update', 'delete'
+    entity_type = db.Column(db.String, nullable=False, index=True)  # 'player', 'nomination', 'bid', etc.
+    entity_id = db.Column(db.Integer, index=True)
+    description = db.Column(db.String, nullable=False)  # Human-readable description
+    old_values = db.Column(db.String)  # JSON of old values
+    new_values = db.Column(db.String)  # JSON of new values
+    is_sensitive = db.Column(db.Boolean, default=False, nullable=False)  # Hide by default in UI
+    ip_address = db.Column(db.String)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now(), index=True)
+
+    # Relationship
+    user = db.relationship("User", foreign_keys=user_id)

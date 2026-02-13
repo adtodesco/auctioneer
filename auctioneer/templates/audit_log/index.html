@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Audit Log{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+
+<form method="get" style="margin-bottom: 2em; background: #f5f5f5; padding: 1em; border: 1px solid #ddd;">
+    <h3>Filters</h3>
+
+    <label for="entity_type">Entity Type</label>
+    <select name="entity_type" id="entity_type">
+        <option value="">All</option>
+        {% for type in entity_types %}
+        <option value="{{ type }}" {% if type == selected_entity_type %}selected{% endif %}>{{ type }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="user_id">User</label>
+    <select name="user_id" id="user_id">
+        <option value="">All</option>
+        {% for user in users %}
+        <option value="{{ user.id }}" {% if user.id|string == selected_user_id %}selected{% endif %}>{{ user.team_name }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="show_sensitive">
+        <input type="checkbox" name="show_sensitive" id="show_sensitive" value="true" {% if show_sensitive %}checked{% endif %}>
+        <strong>Show Sensitive Data</strong> (bids, matches)
+    </label>
+
+    <div class="submit-buttons">
+        <input type="submit" value="Apply Filters">
+        <a href="{{ url_for('admin.audit_log.index') }}">Clear</a>
+    </div>
+</form>
+
+<p><strong>Total entries:</strong> {{ total }} | <strong>Page:</strong> {{ page }} of {{ total_pages }}</p>
+
+<table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Time</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">User</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Action</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Entity</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Description</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in audit_entries %}
+        <tr {% if entry.is_sensitive %}style="background: #fff8dc;"{% endif %}>
+            <td style="border: 1px solid #ddd; padding: 0.5em; white-space: nowrap;">{{ entry.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ entry.user.team_name if entry.user else 'System' }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ entry.action }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ entry.entity_type }}{% if entry.entity_id %} #{{ entry.entity_id }}{% endif %}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ entry.description }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em; font-size: 0.9em;">
+                {% if entry.old_values %}
+                <details>
+                    <summary>Old values</summary>
+                    <pre style="margin: 0; font-size: 0.85em; white-space: pre-wrap; word-wrap: break-word; max-width: 400px;">{{ entry.old_values }}</pre>
+                </details>
+                {% endif %}
+                {% if entry.new_values %}
+                <details>
+                    <summary>New values</summary>
+                    <pre style="margin: 0; font-size: 0.85em; white-space: pre-wrap; word-wrap: break-word; max-width: 400px;">{{ entry.new_values }}</pre>
+                </details>
+                {% endif %}
+                {% if entry.ip_address %}
+                <small>IP: {{ entry.ip_address }}</small>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if total_pages > 1 %}
+<div style="margin-top: 1em;">
+    {% if page > 1 %}
+    <a href="{{ url_for('admin.audit_log.index', page=page-1, show_sensitive=show_sensitive, entity_type=selected_entity_type, user_id=selected_user_id) }}">← Previous</a>
+    {% endif %}
+
+    <span>Page {{ page }} of {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+    <a href="{{ url_for('admin.audit_log.index', page=page+1, show_sensitive=show_sensitive, entity_type=selected_entity_type, user_id=selected_user_id) }}">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<p style="margin-top: 2em; color: #666; font-size: 0.9em;">
+    <strong>Note:</strong> Sensitive entries (highlighted in yellow) include bid values and match decisions during active auctions.
+    These are hidden by default to maintain competitive integrity. Check "Show Sensitive Data" to reveal for debugging.
+</p>
+
+{% endblock %}

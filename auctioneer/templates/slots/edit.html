@@ -1,24 +1,89 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Edit round{% endblock %}</h1>
+<h1>{% block title %}Edit Round {{ round }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row {
+        margin-bottom: 1em;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .form-row input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        max-width: 150px;
+    }
+    .submit-section {
+        margin-top: 1em;
+        padding-top: 1em;
+        border-top: 1px solid #ddd;
+    }
+</style>
+
 <form method="post">
-    <label for="round_num">Round number</label>
-    <input name="round_num" id="round_num" type="number" value="{{ request.form['round_num'] or round }}" required>
-    <div class="submit-buttons">
+    <div class="form-section">
+        <h3>Round Settings</h3>
+        <p>Update round number or delete this round</p>
+
+        <div class="form-row">
+            <label for="round_num">Round Number</label>
+            <input name="round_num" id="round_num" type="number" value="{{ request.form['round_num'] or round }}" required min="1">
+        </div>
+    </div>
+
+    <div class="submit-section">
         <input type="submit" name="action" value="Save">
         <input type="submit" name="action" value="Delete" class="danger"
-            onclick="return confirm('Are you sure you want to delete this round?');">
+            onclick="return confirm('Are you sure you want to delete this round?');" style="margin-left: 1em;">
+        <a href="{{ url_for('admin.slots.index') }}" style="margin-left: 1em;">Cancel</a>
     </div>
 </form>
-<div>Nomination period: <strong>{{ moment(slots[0].nomination_opens_at).format('LLLL') }}</strong> until <strong>{{ moment(slots[0].nomination_closes_at).format('LLLL') }}</strong></div>
-<ul>
-    {% for slot in slots %}
-    <li>{{ moment(slot.closes_at).format('LLL') }}</li>
-    {% endfor %}
-</ul>
+
+<h3 style="margin-top: 1.5em;">Round Details</h3>
+<p style="margin-bottom: 1em;">
+    <strong>Nomination Period:</strong> {{ moment(slots[0].nomination_opens_at).format('LLLL') }} until {{ moment(slots[0].nomination_closes_at).format('LLLL') }}
+</p>
+
+<h3>Auction Slots ({{ slots|length }})</h3>
+<table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Slot #</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Auction Closes At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for slot in slots %}
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em; text-align: center;">{{ loop.index }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ moment(slot.closes_at).format('LLLL') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

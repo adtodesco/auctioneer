@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}User Management{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+
+<table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Team Name</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Short Name</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Tiebreaker Order</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Username</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Admin</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Slack ID</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Discord ID</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ user.team_name }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ user.short_team_name }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ user.tiebreaker_order }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ user.username or '(not registered)' }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">
+                {% if user.is_league_manager %}
+                    <strong style="color: green;">✓ Admin</strong>
+                {% else %}
+                    <span style="color: #999;">—</span>
+                {% endif %}
+            </td>
+            <td style="border: 1px solid #ddd; padding: 0.5em; font-family: monospace; font-size: 0.85em;">{{ user.slack_id or '—' }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em; font-family: monospace; font-size: 0.85em;">{{ user.discord_id or '—' }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">
+                <a class="action" href="{{ url_for('admin.users.edit', user_id=user.id) }}">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="margin-top: 2em; padding: 1em; background: #f0f0f0; border-left: 4px solid #999;">
+    <strong>Note:</strong> Changes to admin status take effect immediately. Use caution when removing admin privileges.
+</div>
+{% endblock %}
