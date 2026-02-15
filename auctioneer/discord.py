@@ -25,7 +25,7 @@ def add_nomination_period_begun_notification(
         ),
         message=(
             f"Get your round {round_number} nominations in by "
-            f"{nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET at thedooauction.com"
+            f"{nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET at [thedooauction.com](https://thedooauction.com)"
         ),
         send_at=nominations_open_at,
     )
@@ -61,7 +61,7 @@ def add_nomination_period_end_notification(
         message=(
             f"Haven't nominated yet? Time is running out! Round {round_number} nomination "
             f"period closes at {nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET "
-            f"at thedooauction.com"
+            f"at [thedooauction.com](https://thedooauction.com)"
         ),
         send_at=nominations_close_at - timedelta(minutes=alert_minutes),
     )
