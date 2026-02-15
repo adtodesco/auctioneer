@@ -244,10 +244,12 @@ input[type=reset] {
     /* Reduce overall padding */
     html {
         padding: 0.5rem;
+        overflow-x: hidden;
     }
 
     body {
         max-width: 100%;
+        overflow-x: hidden;
     }
 
     /* Hide background image on mobile for better readability */
@@ -309,6 +311,11 @@ input[type=reset] {
     .nav-menu ul li span {
         padding: 0.75rem;
         width: 100%;
+    }
+
+    /* Hide boss button on mobile */
+    .nav-menu a[title*="Boss button"] {
+        display: none !important;
     }
 
     /* Content area */
