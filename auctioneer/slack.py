@@ -19,7 +19,7 @@ def add_nomination_period_begun_notification(
 
     notification = Notification(
         title=(
-            f":incoming_envelope:  *round {round_number} nominations are open!*"
+            f":incoming_envelope:  round {round_number} nominations are open!"
         ),
         message=(
             f"Get your round {round_number} nominations in by "
@@ -54,7 +54,7 @@ def add_nomination_period_end_notification(
 
     notification = Notification(
         title=(
-            f":envelope:  *Round {round_number} nomination period closes soon!*"
+            f":envelope:  Round {round_number} nomination period closes soon!"
         ),
         message=(
             f"Haven't nominated yet? Time is running out! Round {round_number} nomination "
@@ -85,7 +85,7 @@ def add_auctions_close_notification(
 
     notification = Notification(
         title=(
-            f":rotating_light:  *Round {round_number} auctions closing soon!*"
+            f":rotating_light:  Round {round_number} auctions closing soon!"
         ),
         message=(
             f"Time is running out! The first round {round_number} auction closes in "
@@ -109,7 +109,7 @@ def remove_auctions_close_notification(round_number):
 
 def add_player_nominated_notification(nomination):
     notification = Notification(
-        title=":mega:  *A player has been nominated!*",
+        title=":mega:  A player has been nominated!",
         message=(
             f"{user_mention} has nominated {str(nomination)}"
         ),
@@ -124,7 +124,7 @@ def add_player_nominated_notification(nomination):
 
 def add_auction_won_notification(nomination):
     notification = Notification(
-        title=":moneybag:  *An auction has been won!*",
+        title=":moneybag:  An auction has been won!",
         message=(
             f"<@{nomination.player.manager_user.slack_id}> has won the auction for "
             f"{str(nomination)} with a bid of ${nomination.bids[0].value}!"
@@ -139,7 +139,7 @@ def add_auction_won_notification(nomination):
 
 
 MATCH_NOTIFICATION_TITLE = (
-    ":stopwatch:  *An auction has closed and is pending a match!*"
+    ":stopwatch:  An auction has closed and is pending a match!"
 )
 
 
