@@ -239,6 +239,168 @@ input[type=reset] {
     width: 50%;
 }
 
+/* Modern Auction Cards */
+.auction-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 1.5em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.auction-card-open {
+    border-left: 4px solid #4caf50;
+}
+
+.auction-card-matching {
+    border-left: 4px solid #ff9800;
+}
+
+.auction-card-closed {
+    border-left: 4px solid #f44336;
+}
+
+.auction-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.25em;
+    background: #f9f9f9;
+    border-bottom: 1px solid #eee;
+    gap: 1em;
+}
+
+.auction-card-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.auction-card-title h3 {
+    margin: 0 0 0.25em 0;
+    font-size: 1.3em;
+    color: #333;
+}
+
+.player-meta {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.status-badge {
+    padding: 0.4em 0.8em;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: bold;
+    text-transform: uppercase;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
+.status-badge-open {
+    background: #4caf50;
+    color: white;
+}
+
+.status-badge-matching {
+    background: #ff9800;
+    color: white;
+}
+
+.status-badge-closed {
+    background: #f44336;
+    color: white;
+}
+
+.auction-card-body {
+    padding: 1.25em;
+}
+
+.auction-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5em 0;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 1em;
+}
+
+.auction-info-row:last-child {
+    border-bottom: none;
+}
+
+.auction-info-row .label {
+    color: #666;
+    font-size: 0.9em;
+    flex-shrink: 0;
+}
+
+.auction-info-row .value {
+    text-align: right;
+    font-size: 0.9em;
+    word-break: break-word;
+}
+
+.auction-alert {
+    background: #fff8e1;
+    border: 1px solid #ffd54f;
+    border-radius: 4px;
+    padding: 0.75em;
+    margin-top: 1em;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.auction-winner {
+    background: #e8f5e9;
+    border: 1px solid #81c784;
+    border-radius: 4px;
+    padding: 0.75em;
+    margin: 1em 0;
+    font-size: 0.95em;
+    text-align: center;
+}
+
+.auction-card-actions {
+    padding: 1em 1.25em;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 0.75em;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.6em 1.2em;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.btn-primary {
+    background: #377ba8;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2a5f85;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d0d0d0;
+}
+
 /* Mobile Responsive Styles */
 @media screen and (max-width: 768px) {
     /* Reduce overall padding */
@@ -461,5 +623,64 @@ input[type=reset] {
     /* Select2 dropdowns */
     .select2-container {
         font-size: 16px;
+    }
+
+    /* Auction cards on mobile */
+    .auction-card {
+        margin-bottom: 1em;
+        border-radius: 6px;
+    }
+
+    .auction-card-header {
+        padding: 1em;
+        flex-wrap: wrap;
+    }
+
+    .auction-card-title h3 {
+        font-size: 1.1em;
+    }
+
+    .player-meta {
+        font-size: 0.85em;
+    }
+
+    .status-badge {
+        font-size: 0.7em;
+        padding: 0.35em 0.7em;
+    }
+
+    .auction-card-body {
+        padding: 1em;
+    }
+
+    .auction-info-row {
+        flex-direction: column;
+        gap: 0.25em;
+        padding: 0.6em 0;
+    }
+
+    .auction-info-row .label {
+        font-size: 0.85em;
+    }
+
+    .auction-info-row .value {
+        text-align: left;
+        font-size: 0.9em;
+    }
+
+    .auction-alert,
+    .auction-winner {
+        font-size: 0.85em;
+        padding: 0.6em;
+    }
+
+    .auction-card-actions {
+        padding: 0.75em 1em;
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 0.75em 1em;
     }
 }

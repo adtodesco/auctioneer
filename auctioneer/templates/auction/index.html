@@ -14,106 +14,125 @@
 <p><i>No nominations, yet...</i></p>
 {% else %}
 {% for nomination in open_nominations %}
-<div class="nomination opened">
-    <div class="modifiable">
-        <div>
-            <h3>{{ nomination.Nomination.player.name }} | {{nomination.Nomination.player.team }} | {{
-                nomination.Nomination.player.position.replace(",", ", ") }}</h3>
-            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by {{
-                nomination.Nomination.nominator_user.team_name }}</p>
+<div class="auction-card auction-card-open">
+    <div class="auction-card-header">
+        <div class="auction-card-title">
+            <h3>{{ nomination.Nomination.player.name }}</h3>
+            <span class="player-meta">{{ nomination.Nomination.player.team }} • {{ nomination.Nomination.player.position.replace(",", ", ") }}</span>
         </div>
-        {% if g.user.is_league_manager == True %}
-        <a class="action" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
-        {% endif %}
+        <span class="status-badge status-badge-open">OPEN</span>
     </div>
 
-    <div>
-        <p class="status">Auction <strong>OPEN</strong> until: {{
-            moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Round {{ nomination.Nomination.slot.round }}]
-        </p>
+    <div class="auction-card-body">
+        <div class="auction-info-row">
+            <span class="label">Nominated by:</span>
+            <span class="value">{{ nomination.Nomination.nominator_user.team_name }}</span>
+        </div>
+        <div class="auction-info-row">
+            <span class="label">Closes:</span>
+            <span class="value">{{ moment(nomination.Nomination.slot.closes_at).format('MMM D, h:mm A') }} (Round {{ nomination.Nomination.slot.round }})</span>
+        </div>
         {% if nomination.Nomination.player.matcher_id %}
-        <p class="match">Match rights: <strong>{{ nomination.Nomination.player.matcher_user.team_name }}</strong></p>
+        <div class="auction-info-row">
+            <span class="label">Match rights:</span>
+            <span class="value"><strong>{{ nomination.Nomination.player.matcher_user.team_name }}</strong></span>
+        </div>
+        {% endif %}
+        {% if g.user %}
+        <div class="auction-info-row">
+            <span class="label">{{ g.user.team_name }}'s bid:</span>
+            <span class="value"><strong>{% if nomination.Bid.value %}${{ nomination.Bid.value }}{% else %}—{% endif %}</strong></span>
+        </div>
         {% endif %}
     </div>
 
-    {% if g.user %}
-    <div class="modifiable">
-        <div>
-            <p class="bid"><strong>{{ g.user.team_name }}'s</strong> current bid: {% if nomination.Bid.value %}${% endif
-                %}{{ nomination.Bid.value }}</p>
-        </div>
-        <a class="action" href="{{ url_for('auction.bid', nomination_id=nomination.Nomination.id) }}">Bid</a>
+    <div class="auction-card-actions">
+        {% if g.user %}
+        <a class="btn btn-primary" href="{{ url_for('auction.bid', nomination_id=nomination.Nomination.id) }}">Place Bid</a>
+        {% endif %}
+        {% if g.user.is_league_manager == True %}
+        <a class="btn btn-secondary" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
-<hr>
 {% endfor %}
 
 {% for nomination in match_nominations %}
-<div class="nomination matching">
-    <div class="modifiable">
-        <div>
-            <h3>{{ nomination.Nomination.player.name }} | {{nomination.Nomination.player.team }} | {{
-                nomination.Nomination.player.position.replace(",", ", ") }}</h3>
-            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by the {{
-                nomination.Nomination.nominator_user.team_name }}</p>
+<div class="auction-card auction-card-matching">
+    <div class="auction-card-header">
+        <div class="auction-card-title">
+            <h3>{{ nomination.Nomination.player.name }}</h3>
+            <span class="player-meta">{{ nomination.Nomination.player.team }} • {{ nomination.Nomination.player.position.replace(",", ", ") }}</span>
         </div>
-        {% if g.user.is_league_manager == True %}
-        <a class="action" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
-        {% endif %}
+        <span class="status-badge status-badge-matching">MATCHING</span>
     </div>
 
-    <div class="modifiable">
-        <div>
-            <p class="status">Auction <strong>CLOSED</strong> on: {{
-                moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Round {{ nomination.Nomination.slot.round }}]
-            </p>
-            <p class="match"><strong>{{ nomination.Nomination.player.matcher_user.team_name }}</strong> has 24 hours to match the winning bid of ${{ nomination.Nomination.bids[0].value }}</p>
+    <div class="auction-card-body">
+        <div class="auction-info-row">
+            <span class="label">Nominated by:</span>
+            <span class="value">{{ nomination.Nomination.nominator_user.team_name }}</span>
         </div>
+        <div class="auction-info-row">
+            <span class="label">Closed:</span>
+            <span class="value">{{ moment(nomination.Nomination.slot.closes_at).format('MMM D, h:mm A') }} (Round {{ nomination.Nomination.slot.round }})</span>
+        </div>
+        <div class="auction-info-row">
+            <span class="label">Winning bid:</span>
+            <span class="value"><strong>${{ nomination.Nomination.bids[0].value }}</strong></span>
+        </div>
+        <div class="auction-alert">
+            <strong>{{ nomination.Nomination.player.matcher_user.team_name }}</strong> has 24 hours to match
+        </div>
+    </div>
+
+    <div class="auction-card-actions">
         {% if g.user.id == nomination.Nomination.player.matcher_id %}
-        <a class="action" href="{{ url_for('auction.match', nomination_id=nomination.Nomination.id) }}">Match</a>
+        <a class="btn btn-primary" href="{{ url_for('auction.match', nomination_id=nomination.Nomination.id) }}">Match Bid</a>
+        {% endif %}
+        {% if g.user.is_league_manager == True %}
+        <a class="btn btn-secondary" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
         {% endif %}
     </div>
 </div>
-<hr>
 {% endfor %}
 
 {% for nomination in closed_nominations %}
-<div class="nomination closed">
-    <div class="modifiable">
-        <div>
-            <h3>{{ nomination.Nomination.player.name }} | {{nomination.Nomination.player.team }} | {{
-                nomination.Nomination.player.position.replace(",", ", ") }}</h3>
-            <p class="about">Nominated {{ moment(nomination.Nomination.created_at).format('LLL') }} by the {{
-                nomination.Nomination.nominator_user.team_name }}</p>
+<div class="auction-card auction-card-closed">
+    <div class="auction-card-header">
+        <div class="auction-card-title">
+            <h3>{{ nomination.Nomination.player.name }}</h3>
+            <span class="player-meta">{{ nomination.Nomination.player.team }} • {{ nomination.Nomination.player.position.replace(",", ", ") }}</span>
         </div>
-        {% if g.user.is_league_manager == True %}
-        <a class="action" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
-        {% endif %}
+        <span class="status-badge status-badge-closed">CLOSED</span>
     </div>
 
-    <div>
-        <p class="status">Auction <strong>CLOSED</strong> on: {{
-            moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Round {{ nomination.Nomination.slot.round }}]
-        </p>
+    <div class="auction-card-body">
+        <div class="auction-info-row">
+            <span class="label">Nominated by:</span>
+            <span class="value">{{ nomination.Nomination.nominator_user.team_name }}</span>
+        </div>
+        <div class="auction-info-row">
+            <span class="label">Closed:</span>
+            <span class="value">{{ moment(nomination.Nomination.slot.closes_at).format('MMM D, h:mm A') }} (Round {{ nomination.Nomination.slot.round }})</span>
+        </div>
+        <div class="auction-winner">
+            🏆 <strong>{{ nomination.Nomination.player.manager_user.team_name }}</strong> won with a bid of <strong>${{ nomination.Nomination.bids[0].value }}</strong>
+        </div>
+        <div class="auction-info-row">
+            <span class="label">All bids:</span>
+            <span class="value">${{ nomination.Nomination.bids[0].value }}{% for bid in nomination.Nomination.bids[1:] %}{% if bid.value %}, ${{ bid.value }}{% endif %}{% endfor %}</span>
+        </div>
     </div>
 
-    <div class="modifiable">
-        <div>
-            <p class="sign"><strong>{{ nomination.Nomination.player.manager_user.team_name }}</strong> has won the auction
-                with a bid of ${{ nomination.Nomination.bids[0].value }}!</p>
-        </div>
+    <div class="auction-card-actions">
         {% if g.user.id == nomination.Nomination.player.manager_id %}
-        <a class="action" href="{{ url_for('auction.sign', player_id=nomination.Nomination.player.id) }}">Sign</a>
+        <a class="btn btn-primary" href="{{ url_for('auction.sign', player_id=nomination.Nomination.player.id) }}">Sign Player</a>
         {% endif %}
-    </div>
-
-    <div>
-        <p class="bids">All bids: <strong>${{ nomination.Nomination.bids[0].value }}</strong>{% for bid in
-            nomination.Nomination.bids[1:] %}{% if bid.value %}, ${{ bid.value }}{% endif %}{% endfor %}</p>
+        {% if g.user.is_league_manager == True %}
+        <a class="btn btn-secondary" href="{{ url_for('auction.edit', nomination_id=nomination.Nomination.id) }}">Edit</a>
+        {% endif %}
     </div>
 </div>
-<hr>
 {% endfor %}
 {% endif %}
 {% endblock %}
