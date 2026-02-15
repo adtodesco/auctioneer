@@ -191,7 +191,10 @@ def send_notification(notification, webhook_url):
     """
     # Build Discord message with plain formatting
     payload = {
-        "content": f"{notification.title}\n\n{notification.message}"
+        "content": f"{notification.title}\n\n{notification.message}",
+        "allowed_mentions": {
+            "parse": ["users"]  # Enable user mentions
+        }
     }
 
     try:
