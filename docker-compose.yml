@@ -1,6 +1,7 @@
 services:
   web:
     image: ghcr.io/adtodesco/auctioneer:latest
+    platform: linux/amd64
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
@@ -9,6 +10,7 @@ services:
       - web.env
   nginx:
     image: ghcr.io/adtodesco/auctioneer-nginx:latest
+    platform: linux/amd64
     ports:
       - 80:80
       - 443:443
