@@ -19,12 +19,11 @@ def add_nomination_period_begun_notification(
 
     notification = Notification(
         title=(
-            f":incoming_envelope:  *Round {round_number} nomination period has begun!* "
+            f":incoming_envelope:  *round {round_number} nominations are open!*"
         ),
         message=(
-            f"Round {round_number} nomination period has begun and will last until "
-            f"{nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET. Head to "
-            f"thedooauction.com to make nominations in this round!"
+            f"Get your round {round_number} nominations in by "
+            f"{nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET at thedooauction.com"
         ),
         send_at=nominations_open_at,
     )
@@ -55,14 +54,12 @@ def add_nomination_period_end_notification(
 
     notification = Notification(
         title=(
-            f":envelope:  *Round {round_number} nomination period ends in {alert_minutes}"
-            f" minutes!*"
+            f":envelope:  *Round {round_number} nomination period closes soon!*"
         ),
         message=(
-            f"Round {round_number} nomination period ends in "
-            f"{alert_minutes} minutes. If you have not made your round {round_number} "
-            f"nominations head to thedooauction.com to make them by "
-            f"{nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET."
+            f"Haven't nominated yet? Time is running out! Round {round_number} nomination "
+            f"period closes at {nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET "
+            f"at thedooauction.com"
         ),
         send_at=nominations_close_at - timedelta(minutes=alert_minutes),
     )
@@ -88,13 +85,11 @@ def add_auctions_close_notification(
 
     notification = Notification(
         title=(
-            f":rotating_light:  *Round {round_number} auctions close in {alert_minutes} "
-            f"minutes!*"
+            f":rotating_light:  *Round {round_number} auctions closing soon!*"
         ),
         message=(
-            f"Round {round_number} auctions will start closing in {alert_minutes} minutes. "
-            f"Get your bids in and make your final adjustments before the clock runs "
-            f"out!"
+            f"Time is running out! The first round {round_number} auction closes in "
+            f"{alert_minutes} minutes. Get your bids in!"
         ),
         send_at=auctions_start_closing_at - timedelta(minutes=alert_minutes),
     )
@@ -116,8 +111,7 @@ def add_player_nominated_notification(nomination):
     notification = Notification(
         title=":mega:  *A player has been nominated!*",
         message=(
-            f"<@{nomination.nominator_user.slack_id}> has nominated "
-            f"{str(nomination)}) in round {nomination.slot.round}."
+            f"{user_mention} has nominated {str(nomination)}"
         ),
         send_at=datetime.utcnow(),
     )
