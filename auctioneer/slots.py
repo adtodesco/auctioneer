@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pytz
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 
-from auctioneer.slack import (
+from auctioneer.notifications import (
     add_auctions_close_notification,
     add_nomination_period_begun_notification,
     add_nomination_period_end_notification,

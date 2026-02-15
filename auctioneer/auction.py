@@ -30,7 +30,7 @@ from .auth import admin_required, login_required
 from .config import get_match_time_hours, get_minimum_bid_value, get_minimum_total_salary, get_salary_cap
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
-from .slack import (
+from .notifications import (
     add_auction_match_notification,
     add_auction_won_notification,
     add_player_nominated_notification,
