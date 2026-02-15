@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Import Players from CSV{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+<div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin-bottom: 20px;">
+    <strong>Warning:</strong> This operation will delete all existing players and replace them with the uploaded CSV data.
+    This action cannot be undone.
+</div>
+
+<h3>Expected CSV Format</h3>
+
+<h4>Required Columns:</h4>
+<ul>
+    <li><strong>ID</strong> - Fantrax player ID</li>
+    <li><strong>Player</strong> - Player name</li>
+    <li><strong>Team</strong> - MLB team</li>
+    <li><strong>Position</strong> - Player position(s)</li>
+    <li><strong>Status</strong> - "FA" for free agents or team short name</li>
+    <li><strong>Salary</strong> - Current salary (if rostered)</li>
+    <li><strong>Contract</strong> - Contract years remaining (if rostered)</li>
+</ul>
+
+<h4>Optional Columns:</h4>
+<ul>
+    <li><strong>Match Rights</strong> - Team short name who holds match rights (e.g., "TDO", "BOS")</li>
+    <li><strong>Hometown Discount</strong> - "Yes", "True", "1" to enable 90% discount for matcher</li>
+</ul>
+
+<p><em>Note: Extra columns (stats, etc.) are fine and will be ignored.</em></p>
+
+<h3>Upload CSV File</h3>
+<form method="post" enctype="multipart/form-data">
+    <label for="file">Select CSV file:</label>
+    <input type="file" name="file" id="file" accept=".csv" required>
+
+    <div class="submit-buttons">
+        <input type="submit" value="Import Players" onclick="return confirm('Are you sure you want to delete all existing players and import new ones? This cannot be undone.');">
+        <a href="{{ url_for('admin.index') }}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

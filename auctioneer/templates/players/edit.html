@@ -1,47 +1,124 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Edit player{% endblock %}</h1>
+<h1>{% block title %}Edit Player{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <hr>
-<h3>{{ player.name }} | {{ player.team }} | {{ player.position.replace(",", ", ") }}</h3>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row {
+        margin-bottom: 1em;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .form-row select, .form-row input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        max-width: 400px;
+    }
+    .submit-section {
+        margin-top: 2em;
+        padding-top: 1em;
+        border-top: 1px solid #ddd;
+    }
+</style>
+
 <form method="post">
-    <label for="status">Status</label>
-    <select name="manager_id" id="status">
-        {% if player.manager_id %}
-        <option value="" >Free Agent</option>
-        {% else %}
-        <option value="" selected>Free Agent</option>
-        {% endif %}
-        {% for user in users %}
-        {% if user.id == player.manager_id %}
-        <option value="{{ user.id }}" selected>{{ user.team_name }}</option>
-        {% else %}
-        <option value="{{ user.id }}">{{ user.team_name }}</option>
-        {% endif %}
-        {% endfor %}
-    </select>
+    <!-- Player Status -->
+    <div class="form-section">
+        <h3>{{ player.name }} | {{ player.team }} | {{ player.position.replace(",", ", ") }}</h3>
+        <p>Current ownership and contract status</p>
 
-    <label for="matcher_id">Match rights</label>
-    <select name="matcher_id" id="matcher_id">
-        {% if player.matcher_id %}
-        <option value="" >None</option>
-        {% else %}
-        <option value="" selected>None</option>
-        {% endif %}
-        {% for user in users %}
-        {% if user.id == player.matcher_id %}
-        <option value="{{ user.id }}" selected>{{ user.team_name }}</option>
-        {% else %}
-        <option value="{{ user.id }}">{{ user.team_name }}</option>
-        {% endif %}
-        {% endfor %}
-    </select>
+        <div class="form-row">
+            <label for="status">Manager</label>
+            <select name="manager_id" id="status">
+                {% if player.manager_id %}
+                <option value="">Free Agent</option>
+                {% else %}
+                <option value="" selected>Free Agent</option>
+                {% endif %}
+                {% for user in users %}
+                {% if user.id == player.manager_id %}
+                <option value="{{ user.id }}" selected>{{ user.team_name }}</option>
+                {% else %}
+                <option value="{{ user.id }}">{{ user.team_name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
 
-    <div class="submit-buttons">
-        <input type="submit" value="Save">
+        <div class="form-row">
+            <label for="team">MLB Team</label>
+            <select name="team" id="team">
+                {% for mlb_team in teams %}
+                <option value="{{ mlb_team }}" {% if mlb_team == player.team %}selected{% endif %}>
+                    {{ mlb_team }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Match Rights -->
+    <div class="form-section">
+        <h3>Match Rights</h3>
+        <p>Team with the right to match the winning bid</p>
+
+        <div class="form-row">
+            <label for="matcher_id">Match Rights Holder</label>
+            <select name="matcher_id" id="matcher_id">
+                {% if player.matcher_id %}
+                <option value="">None</option>
+                {% else %}
+                <option value="" selected>None</option>
+                {% endif %}
+                {% for user in users %}
+                {% if user.id == player.matcher_id %}
+                <option value="{{ user.id }}" selected>{{ user.team_name }}</option>
+                {% else %}
+                <option value="{{ user.id }}">{{ user.team_name }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row">
+            <label for="hometown_discount">
+                <input type="checkbox" name="hometown_discount" id="hometown_discount"
+                       {% if player.hometown_discount %}checked{% endif %}>
+                <strong>Hometown Discount (90%)</strong>
+            </label>
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                If checked, this team can match at 90% of the winning bid (minimum $11)
+            </small>
+        </div>
+    </div>
+
+    <div class="submit-section">
+        <input type="submit" value="Save Changes">
+        <a href="{{ url_for('admin.players.index') }}" style="margin-left: 1em;">Cancel</a>
     </div>
 </form>
 {% endblock %}

@@ -1,16 +1,61 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Log in{% endblock %}</h1>
+<h1>{% block title %}Login{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+        max-width: 400px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row {
+        margin-bottom: 0.6em;
+    }
+    .form-row:last-child {
+        margin-bottom: 0;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .form-row input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+</style>
+
 <form method="post">
-    <label for="username">Username</label>
-    <input name="username" id="username" required>
-    <label for="password">Password</label>
-    <input type="password" name="password" id="password" required>
+    <div class="form-section">
+        <div class="form-row">
+            <label for="username">Username</label>
+            <input name="username" id="username" type="text" required>
+        </div>
+
+        <div class="form-row">
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" required>
+        </div>
+    </div>
+
     <input type="submit" value="Log In">
 </form>
 {% endblock %}

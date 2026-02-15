@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Edit User: {{ user.team_name }}{% endblock %}</h1>
+<h1>{% block title %}Edit User{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
@@ -11,7 +11,7 @@
     .form-section {
         background: #f9f9f9;
         border: 1px solid #ddd;
-        padding: 1.5em;
+        padding: 1.5em 1.5em 0.8em 1.5em;
         margin-bottom: 1.5em;
         border-radius: 4px;
     }
@@ -40,28 +40,47 @@
         max-width: 400px;
     }
     .submit-section {
-        margin-top: 2em;
+        margin-top: 1em;
         padding-top: 1em;
         border-top: 1px solid #ddd;
     }
     .info-box {
-        margin-top: 1.5em;
+        margin-bottom: 1.5em;
         padding: 1em;
         background: #f0f0f0;
         border-left: 4px solid #999;
     }
     .warning-box {
-        margin-top: 1.5em;
+        margin-bottom: 1.5em;
         padding: 1em;
         background: #fff8dc;
         border-left: 4px solid #f0ad4e;
     }
 </style>
 
+{% if user.is_league_manager %}
+<div class="warning-box">
+    <strong>⚠️ Warning:</strong> This user has full admin privileges, including the ability to modify all settings, view audit logs, and manage other users.
+</div>
+{% endif %}
+
+{% if user.username %}
+<div class="info-box">
+    <strong>Login Status:</strong> Registered<br>
+    <strong>Username:</strong> <code>{{ user.username }}</code><br>
+    <small style="color: #666;">Use the Password Management section below to reset this user's password</small>
+</div>
+{% else %}
+<div class="info-box">
+    <strong>Login Status:</strong> Not yet registered<br>
+    <small style="color: #666;">User can claim this team at <a href="{{ url_for('auth.register') }}">/auth/register</a></small>
+</div>
+{% endif %}
+
 <form method="post">
     <!-- Team Information -->
     <div class="form-section">
-        <h3>Team Information</h3>
+        <h3>{{ user.team_name }}</h3>
         <p>Basic team details and identifiers</p>
 
         <div class="form-row">
@@ -124,28 +143,25 @@
         </div>
     </div>
 
+    {% if user.username %}
+    <!-- Password Management -->
+    <div class="form-section">
+        <h3>Password Management</h3>
+        <p>Reset the user's password</p>
+
+        <div class="form-row">
+            <label for="new_password">New Password</label>
+            <input name="new_password" id="new_password" type="password" value="">
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Leave blank to keep current password. Enter a new password to reset it.
+            </small>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="submit-section">
         <input type="submit" value="Save Changes">
         <a href="{{ url_for('admin.users.index') }}" style="margin-left: 1em;">Cancel</a>
     </div>
 </form>
-
-{% if user.is_league_manager %}
-<div class="warning-box">
-    <strong>⚠️ Warning:</strong> This user has full admin privileges, including the ability to modify all settings, view audit logs, and manage other users.
-</div>
-{% endif %}
-
-{% if user.username %}
-<div class="info-box">
-    <strong>Login Status:</strong> Registered<br>
-    <strong>Username:</strong> <code>{{ user.username }}</code><br>
-    <small style="color: #666;">Password management not available through this interface</small>
-</div>
-{% else %}
-<div class="info-box">
-    <strong>Login Status:</strong> Not yet registered<br>
-    <small style="color: #666;">User can claim this team at <a href="{{ url_for('auth.register') }}">/auth/register</a></small>
-</div>
-{% endif %}
 {% endblock %}

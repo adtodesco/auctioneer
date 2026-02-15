@@ -7,7 +7,14 @@
 {% block content %}
 <hr>
 <form method="post">
-    <label for="match">Match the ${{ nomination.bids[0].value }} bid and re-sign {{nomination.player.name }}?</label>
+    {% if discounted_bid %}
+    <label for="match">
+        Match the ${{ winning_bid }} bid and re-sign {{ nomination.player.name }}?<br>
+        <strong>Hometown discount applies: Your cost will be ${{ discounted_bid }} (90% of winning bid)</strong>
+    </label>
+    {% else %}
+    <label for="match">Match the ${{ winning_bid }} bid and re-sign {{ nomination.player.name }}?</label>
+    {% endif %}
     <select name="match" id="match" required>
         <option disabled selected value="">-- Select yes or no --</option>
         <option value="yes">Yes</option>

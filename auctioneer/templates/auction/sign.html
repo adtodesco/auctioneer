@@ -1,24 +1,80 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Sign {{ player.name }} | {{player.team }} | {{ player.position.replace(",", ", ") }}{% endblock %}
-</h1>
+<h1>{% block title %}Sign Player{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+</style>
+
 <form method="post">
-    <label for="value">Contract</label>
-    <select name="contract" id="contract" required>
-        <option value="" selected>-- Select an option --</option>
-        {% for contract, salary in options.items() %}
-        {% if contract == player.contract %}
-        <option value="{{ contract }}" selected>${{ salary }}/year thru {{ contract }}</option>
-        {% else %}
-        <option value="{{ contract }}">${{ salary }}/year thru {{ contract }}</option>
-        {% endif %}
-        {% endfor %}
-    </select>
+    <div class="form-section">
+        <h3>{{ player.name }} | {{player.team }} | {{ player.position.replace(",", ", ") }}</h3>
+        <p><strong>Your winning bid: ${{ user_bid }}</strong></p>
+
+        <label for="value" style="display: block; margin-bottom: 0.3em;">Select Contract</label>
+        <select name="contract" id="contract" required style="max-width: 400px; margin-bottom: 1.5em; box-sizing: border-box;">
+            <option value="" selected>-- Select an option --</option>
+            {% for contract, salary in options.items() %}
+            {% if contract == player.contract %}
+            <option value="{{ contract }}" selected>${{ salary }}/year thru {{ contract }}</option>
+            {% else %}
+            <option value="{{ contract }}">${{ salary }}/year thru {{ contract }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+
+        <hr style="margin: 1.5em 0; border: none; border-top: 1px solid #ddd;">
+
+        <h4 style="margin-top: 0; margin-bottom: 0.5em; font-weight: normal;">Major League Minimum Contracts</h4>
+        <p style="margin-bottom: 1em; color: #666; font-size: 0.9em;">Reference table showing minimum salary requirements by contract end year</p>
+
+        <table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse; background: white;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; font-weight: normal;">Contract End Year</th>
+                    {% for year, values in min_contracts.items()|sort %}
+                    <th style="border: 1px solid #ddd; padding: 0.5em; font-weight: normal;">{{ year }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">Annual Salary</td>
+                    {% for year, values in min_contracts.items()|sort %}
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">${{ values.annual }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">Total Salary</td>
+                    {% for year, values in min_contracts.items()|sort %}
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">${{ values.total }}</td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
     <input type="submit" name="action" value="Save">
 </form>
 {% endblock %}

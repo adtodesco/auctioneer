@@ -6,18 +6,97 @@
 
 {% block content %}
 <hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row {
+        margin-bottom: 1em;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .form-row select,
+    .form-row input[type="text"],
+    .form-row input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        max-width: 600px;
+    }
+</style>
+
 <form method="post">
-    <label for="player_id">Player</label>
-    <select name="player_id" id="player_id" required>
-        <option disabled selected value="">-- Select a player --</option>
-        {% for player in players %}
-        <option value="{{ player.id }}">{{ player.name }} | {{ player.team }} | {{ player.position.replace(",", ", ") }}
-        </option>
-        {% endfor %}
-    </select>
-    <label for="bid_value">Enter bid below. Your bid will become the players total salary if you win this player's
-        auction.</label>
-    <input name="bid_value" id="bid_value" value="{{ request.form['bid_value'] }}" required>
-    <input type="submit" value="Save">
+    <div class="form-section">
+        <h3>Nominate Player</h3>
+        <p>Select a player and enter your opening bid</p>
+
+        <div class="form-row">
+            <label for="player_id">Player</label>
+            <select name="player_id" id="player_id" required>
+                <option disabled selected value="">-- Select a player --</option>
+                {% for player in players %}
+                <option value="{{ player.id }}">{{ player.name }} | {{ player.team }} | {{ player.position.replace(",", ", ") }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row">
+            <label for="bid_value">Bid Value</label>
+            <input name="bid_value" id="bid_value" type="number" value="{{ request.form['bid_value'] }}" required>
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Your bid will become the player's total salary if you win this auction
+            </small>
+        </div>
+
+        <hr style="margin: 1.5em 0; border: none; border-top: 1px solid #ddd;">
+
+        <h4 style="margin-top: 0; margin-bottom: 0.5em; font-weight: normal;">Major League Minimum Contracts</h4>
+        <p style="margin-bottom: 1em; color: #666; font-size: 0.9em;">Reference table showing minimum salary requirements by contract end year</p>
+
+        <table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse; background: white;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ddd; padding: 0.5em; font-weight: normal;">Contract End Year</th>
+            {% for year, values in min_contracts.items()|sort %}
+            <th style="border: 1px solid #ddd; padding: 0.5em; font-weight: normal;">{{ year }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Annual Salary</td>
+            {% for year, values in min_contracts.items()|sort %}
+            <td style="border: 1px solid #ddd; padding: 0.5em;">${{ values.annual }}</td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Total Salary</td>
+            {% for year, values in min_contracts.items()|sort %}
+            <td style="border: 1px solid #ddd; padding: 0.5em;">${{ values.total }}</td>
+            {% endfor %}
+        </tr>
+        </tbody>
+        </table>
+    </div>
+
+    <input type="submit" value="Nominate Player">
 </form>
 {% endblock %}

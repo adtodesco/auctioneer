@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Edit Configuration{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .form-row input[type="text"],
+    .form-row textarea {
+        width: 100%;
+        box-sizing: border-box;
+        max-width: 600px;
+        font-family: monospace;
+    }
+    .submit-section {
+        margin-top: 2em;
+        padding-top: 1em;
+        border-top: 1px solid #ddd;
+    }
+</style>
+
+<form method="post">
+    <div class="form-section">
+        <h3>{{ config.key }}</h3>
+        <p>{{ config.description or 'No description available' }}</p>
+
+        <div class="form-row">
+            <label for="value">Value ({{ config.value_type }})</label>
+            {% if config.value_type == 'json' %}
+            <textarea name="value" id="value" rows="10" required>{{ config.value }}</textarea>
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Must be valid JSON format
+            </small>
+            {% else %}
+            <input type="text" name="value" id="value" value="{{ config.value }}" required>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="submit-section">
+        <input type="submit" value="Save Changes">
+        <a href="{{ url_for('admin.config.index') }}" style="margin-left: 1em;">Cancel</a>
+    </div>
+</form>
+{% endblock %}

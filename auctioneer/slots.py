@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 import pytz
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 
 from auctioneer.slack import (
     add_auctions_close_notification,
@@ -13,6 +13,7 @@ from auctioneer.slack import (
 )
 
 from . import db
+from .audit_log import log_slot_create, log_slot_delete, log_slot_update
 from .auth import admin_required, login_required
 from .model import Slot
 from .utils import group_slots_by_round
@@ -124,6 +125,11 @@ def create():
                 closes_at += slot_timedelta
 
             db.session.add_all(slots)
+
+            # Log audit events for slot creation
+            for slot in slots:
+                log_slot_create(slot, user=g.user)
+
             db.session.commit()
 
             add_nomination_period_begun_notification(
@@ -166,6 +172,21 @@ def edit(round):
                     "because they are already closed."
                 )
 
+            # Get slots to delete for audit logging
+            slots_to_delete = (
+                db.session.execute(
+                    db.select(Slot)
+                    .where(Slot.round == round)
+                    .where(Slot.closes_at > datetime.utcnow())
+                )
+                .scalars()
+                .all()
+            )
+
+            # Log audit events for slot deletion
+            for slot in slots_to_delete:
+                log_slot_delete(slot, user=g.user)
+
             db.session.query(Slot).where(Slot.round == round).where(
                 Slot.closes_at > datetime.utcnow()
             ).delete()
@@ -193,8 +214,17 @@ def edit(round):
             if error:
                 flash(error)
             elif round_num != round:
+                # Log audit events for slot updates
                 for slot in slots:
+                    old_values = {
+                        'round': slot.round,
+                        'closes_at': str(slot.closes_at),
+                        'nomination_opens_at': str(slot.nomination_opens_at),
+                        'nomination_closes_at': str(slot.nomination_closes_at)
+                    }
                     slot.round = round_num
+                    log_slot_update(slot, old_values, user=g.user)
+
                 db.session.add_all(slots)
                 db.session.commit()
                 return redirect(url_for("admin.slots.index"))

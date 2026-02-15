@@ -5,12 +5,143 @@
 {% endblock %}
 
 {% block content %}
-<form method="post">
-    {% for user in users %}
-    <label for="user_{{ user.id }}_tiebreaker_order">{{ user.team_name }}</label>
-    <input name="user_{{ user.id }}_tiebreaker_order" id="user_{{ user.id }}_tiebreaker_order"
-        value="{{ request.form['user_{{ user.id }}_tiebreaker_order'] or user.tiebreaker_order }}" required>
-    {% endfor %}
+<hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .team-row {
+        background: white;
+        border: 1px solid #ddd;
+        padding: 0.75em;
+        margin-bottom: 0.5em;
+        cursor: move;
+        display: flex;
+        align-items: center;
+        gap: 1em;
+        border-radius: 4px;
+    }
+    .team-row:hover {
+        background: #f0f0f0;
+    }
+    .team-row.dragging {
+        opacity: 0.5;
+    }
+    .team-row.drag-over {
+        border-top: 3px solid #4CAF50;
+    }
+    .drag-handle {
+        color: #999;
+        font-size: 1.2em;
+    }
+    .team-order {
+        font-weight: bold;
+        color: #666;
+        min-width: 30px;
+    }
+</style>
+
+<form method="post" id="tiebreakerForm">
+    <div class="form-section">
+        <h3>Tiebreaker Order</h3>
+        <p>Drag teams to reorder (lower number wins ties)</p>
+
+        <div id="teamList">
+            {% for user in users | sort(attribute='tiebreaker_order') %}
+            <div class="team-row" draggable="true" data-user-id="{{ user.id }}">
+                <span class="drag-handle">⋮⋮</span>
+                <span class="team-order">{{ loop.index }}</span>
+                <span class="team-name">{{ user.team_name }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <input type="submit" value="Save">
 </form>
+
+<script>
+    const teamList = document.getElementById('teamList');
+    const teamRows = teamList.querySelectorAll('.team-row');
+    let draggedElement = null;
+
+    // Update order numbers
+    function updateOrderNumbers() {
+        const rows = teamList.querySelectorAll('.team-row');
+        rows.forEach((row, index) => {
+            row.querySelector('.team-order').textContent = index + 1;
+        });
+    }
+
+    // Drag events
+    teamRows.forEach(row => {
+        row.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+        });
+
+        row.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            teamList.querySelectorAll('.team-row').forEach(r => r.classList.remove('drag-over'));
+        });
+
+        row.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+        });
+
+        row.addEventListener('dragleave', function(e) {
+            this.classList.remove('drag-over');
+        });
+
+        row.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            if (this !== draggedElement) {
+                const allRows = [...teamList.querySelectorAll('.team-row')];
+                const draggedIndex = allRows.indexOf(draggedElement);
+                const targetIndex = allRows.indexOf(this);
+
+                if (draggedIndex < targetIndex) {
+                    this.after(draggedElement);
+                } else {
+                    this.before(draggedElement);
+                }
+
+                updateOrderNumbers();
+            }
+        });
+    });
+
+    // On form submit, add hidden inputs with new order
+    document.getElementById('tiebreakerForm').addEventListener('submit', function(e) {
+        const rows = teamList.querySelectorAll('.team-row');
+        rows.forEach((row, index) => {
+            const userId = row.getAttribute('data-user-id');
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `user_${userId}_tiebreaker_order`;
+            input.value = index + 1;
+            this.appendChild(input);
+        });
+    });
+</script>
 {% endblock %}

@@ -10,6 +10,7 @@ from flask import (
 )
 
 from . import db
+from .audit_log import log_tiebreaker_update
 from .auth import admin_required, login_required
 from .model import User
 
@@ -34,6 +35,7 @@ def edit():
         error = None
 
         updates = dict()
+        old_values = dict()  # Track old values for audit logging
         for user in users:
             name = f"user_{user.id}_tiebreaker_order"
             if name in request.form:
@@ -47,6 +49,7 @@ def edit():
                     break
 
                 if tiebreaker_order != user.tiebreaker_order:
+                    old_values[user.id] = user.tiebreaker_order
                     user.tiebreaker_order = None
                     updates[user.id] = tiebreaker_order
 
@@ -58,6 +61,11 @@ def edit():
                 user.tiebreaker_order = tiebreaker_order
                 db.session.add(user)
             try:
+                # Log audit events for each changed user
+                for user_id, new_order in updates.items():
+                    old_order = old_values[user_id]
+                    log_tiebreaker_update(user_id, old_order, new_order, admin_user=g.user)
+
                 db.session.commit()
             except db.exc.IntegrityError:
                 db.session.rollback()

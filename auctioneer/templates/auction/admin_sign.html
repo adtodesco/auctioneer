@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Admin Sign Player{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 1em;
+        color: #333;
+    }
+</style>
+
+<form method="post" id="signForm">
+    <div class="form-section">
+        <h3>{{ player.name }} | {{ player.team }} | {{ player.position.replace(",", ", ") }}</h3>
+
+        <label for="manager_id" style="display: block; margin-bottom: 0.3em;">Manager</label>
+        <select name="manager_id" id="manager_id" required onchange="updateContracts()" style="width: 100%; max-width: 400px; margin-bottom: 1em;">
+        <option value="" selected>-- Select manager --</option>
+        {% for user in users %}
+        <option value="{{ user.id }}" data-bid="{{ contract_options.get(user.id, {}).get('bid', 0) }}">
+            {{ user.team_name }}
+            {% if user.id in contract_options %}
+            (Bid: ${{ contract_options[user.id].bid }})
+            {% else %}
+            (No bid)
+            {% endif %}
+        </option>
+        {% endfor %}
+    </select>
+
+        <label for="contract" style="display: block; margin-bottom: 0.3em;">Contract (Years)</label>
+        <select name="contract" id="contract" required style="width: 100%; max-width: 400px; margin-bottom: 1.5em;">
+            <option value="" selected>-- Select contract --</option>
+        </select>
+
+        <hr style="margin: 1.5em 0; border: none; border-top: 1px solid #ddd;">
+
+        <h4 style="margin-top: 0; margin-bottom: 0.5em; font-weight: normal;">Major League Minimum Contracts</h4>
+        <p style="margin-bottom: 1em; color: #666; font-size: 0.9em;">Reference table showing minimum salary requirements by contract end year</p>
+
+        <table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse; background: white;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; font-weight: normal;">Contract End Year</th>
+                    {% for year, values in min_contracts.items()|sort %}
+                    <th style="border: 1px solid #ddd; padding: 0.5em; font-weight: normal;">{{ year }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">Annual Salary</td>
+                    {% for year, values in min_contracts.items()|sort %}
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">${{ values.annual }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">Total Salary</td>
+                    {% for year, values in min_contracts.items()|sort %}
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">${{ values.total }}</td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="submit-buttons">
+        <input type="submit" value="Sign Player">
+        <a href="{{ url_for('admin.players.index') }}">Cancel</a>
+    </div>
+</form>
+
+<script>
+// Store contract options in JavaScript
+const contractOptions = {{ contract_options | tojson }};
+
+function updateContracts() {
+    const managerSelect = document.getElementById('manager_id');
+    const contractSelect = document.getElementById('contract');
+    const managerId = parseInt(managerSelect.value);
+
+    // Clear existing options
+    contractSelect.innerHTML = '<option value="" selected>-- Select contract --</option>';
+
+    if (managerId && contractOptions[managerId]) {
+        const options = contractOptions[managerId].options;
+        for (const [year, salary] of Object.entries(options)) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = `${year} years ($${salary}/year)`;
+            contractSelect.appendChild(option);
+        }
+    }
+}
+</script>
+
+{% endblock %}

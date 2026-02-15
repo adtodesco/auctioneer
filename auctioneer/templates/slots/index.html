@@ -1,22 +1,45 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Auction rounds{% endblock %}</h1>
-<a class="action" href="{{ url_for('admin.slots.create') }}">Create a round</a>
+<h1>{% block title %}Auction Rounds{% endblock %}</h1>
+<a class="action" href="{{ url_for('admin.slots.create') }}">Create Round</a>
 {% endblock %}
 
 {% block content %}
 <hr>
-{% for round, slots in rounds.items() %}
-<div class="modifiable">
-    <h3>Round {{ round }}</h3>
-    <a class="action" href="{{ url_for('admin.slots.edit', round=round) }}">Edit</a>
-</div>
-<div>Nomination period: <strong>{{ moment(slots[0].nomination_opens_at).format('LLLL') }}</strong> until <strong>{{ moment(slots[0].nomination_closes_at).format('LLLL') }}</strong></div>
-<ul>
-    {% for slot in slots %}
-    <li>{{ moment(slot.closes_at).format('LLLL') }}</li>
-    {% endfor %}
-</ul>
-{% endfor %}
+
+{% if rounds %}
+<table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Round</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Nomination Period</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Slots</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">First Auction</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Last Auction</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for round, slots in rounds.items() %}
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ round }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">
+                {{ moment(slots[0].nomination_opens_at).format('MMM D, h:mm A') }} -
+                {{ moment(slots[0].nomination_closes_at).format('MMM D, h:mm A') }}
+            </td>
+            <td style="border: 1px solid #ddd; padding: 0.5em; text-align: center;">{{ slots|length }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ moment(slots[0].closes_at).format('MMM D, h:mm A') }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ moment(slots[-1].closes_at).format('MMM D, h:mm A') }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">
+                <a class="action" href="{{ url_for('admin.slots.edit', round=round) }}">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No auction rounds created yet. <a href="{{ url_for('admin.slots.create') }}">Create the first round</a></p>
+{% endif %}
+
 {% endblock %}

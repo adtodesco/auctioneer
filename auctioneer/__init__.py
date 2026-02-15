@@ -44,7 +44,7 @@ def create_app(test_config=None):
     db.init_app(app)
 
     # All models need to be imported before setting up the database
-    from .model import Bid, Nomination, Notification, Player, Slot, User  # noqa: F401
+    from .model import AuditLog, Bid, Config, Nomination, Notification, Player, Slot, User  # noqa: F401
 
     with app.app_context():
         db.create_all()
@@ -57,11 +57,17 @@ def create_app(test_config=None):
 
     app.register_blueprint(auction.bp)
 
-    from . import admin, players, slots
+    from . import admin, audit_log, config, players, slots, users
 
     admin.bp.register_blueprint(slots.bp)
 
     admin.bp.register_blueprint(players.bp)
+
+    admin.bp.register_blueprint(config.bp)
+
+    admin.bp.register_blueprint(users.bp)
+
+    admin.bp.register_blueprint(audit_log.bp)
 
     app.register_blueprint(admin.bp)
 

@@ -2,6 +2,7 @@ import csv
 from datetime import datetime, timedelta
 
 from . import db
+from .config import get_max_nominations_normal, get_max_nominations_urgent, get_urgent_threshold_hours
 from .model import Bid, Nomination, Player, Slot, User
 
 
@@ -39,8 +40,12 @@ def user_can_nominate(user, slot):
     nominations_count = user_nominations_per_round.get(slot.round, 0)
     time_left = slot.nomination_closes_at - datetime.utcnow()
 
-    return nominations_count < 2 or (
-        nominations_count < 3 and time_left < timedelta(hours=24)
+    max_normal = get_max_nominations_normal()
+    max_urgent = get_max_nominations_urgent()
+    urgent_threshold = get_urgent_threshold_hours()
+
+    return nominations_count < max_normal or (
+        nominations_count < max_urgent and time_left < timedelta(hours=urgent_threshold)
     )
 
 
@@ -70,6 +75,16 @@ def players_from_fantrax_export(file, users):
                 salary = int(float(player["Salary"]))
                 contract = int(player["Contract"])
 
+            # Optional: Match rights (team short name)
+            matcher_id = None
+            if "Match Rights" in player and player["Match Rights"]:
+                matcher_id = short_name_to_user.get(player["Match Rights"])
+
+            # Optional: Hometown discount (Yes/No, True/False, 1/0)
+            hometown_discount = False
+            if "Hometown Discount" in player and player["Hometown Discount"]:
+                hometown_discount = player["Hometown Discount"].strip().lower() in ["yes", "true", "1", "y"]
+
             players.append(
                 Player(
                     fantrax_id=player["ID"],
@@ -79,6 +94,8 @@ def players_from_fantrax_export(file, users):
                     salary=salary,
                     contract=contract,
                     manager_id=short_name_to_user.get(player["Status"]),
+                    matcher_id=matcher_id,
+                    hometown_discount=hometown_discount,
                 )
             )
 

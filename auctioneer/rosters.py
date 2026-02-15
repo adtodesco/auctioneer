@@ -1,23 +1,10 @@
-from flask import Blueprint, g, redirect, render_template, url_for
+from flask import Blueprint, flash, g, redirect, render_template, url_for
 
 from . import db
+from .config import get_salary_cap
 from .model import Player, User
 
 bp = Blueprint("rosters", __name__, url_prefix="/rosters")
-
-# TODO: Store this in some sort of config or DB table
-SALARY_CAP = {
-    2025: 1125,
-    2026: 1170,
-    2027: 1217,
-    2028: 1265,
-    2029: 1316,
-    2030: 1369,
-    2031: 1423,
-    2032: 1480,
-    2033: 1539,
-    2034: 1601,
-}
 
 
 @bp.route("/")
@@ -62,23 +49,35 @@ def roster(team):
         .all()
     )
 
-    team_salary = {year: {"salary": 0, "players": 0} for year in SALARY_CAP}
-    min_year = list(SALARY_CAP.keys())[0]
-    max_year = list(SALARY_CAP.keys())[-1]
-    for player in players:
-        if player.contract is None:
-            continue
-        year = min_year
-        while year <= player.contract and year <= max_year:
-            team_salary[year]["salary"] += player.salary
-            team_salary[year]["players"] += 1
-            year += 1
+    salary_cap = get_salary_cap()
+
+    # Check if salary cap is configured
+    if not salary_cap:
+        flash("Salary cap is not configured. Please ask the league manager to configure it.", "error")
+        # Show empty roster state
+        team_salary = {}
+        min_year = None
+        max_year = None
+    else:
+        team_salary = {year: {"salary": 0, "players": 0} for year in salary_cap}
+        min_year = min(salary_cap.keys())
+        max_year = max(salary_cap.keys())
+    # Only calculate salary if config is set
+    if min_year is not None and max_year is not None:
+        for player in players:
+            if player.contract is None:
+                continue
+            year = min_year
+            while year <= player.contract and year <= max_year:
+                team_salary[year]["salary"] += player.salary
+                team_salary[year]["players"] += 1
+                year += 1
 
     return render_template(
         "rosters/roster.html",
         selected_user=user,
         players=players,
         teams=short_team_names,
-        salary_cap=SALARY_CAP,
+        salary_cap=salary_cap,
         team_salary=team_salary,
     )

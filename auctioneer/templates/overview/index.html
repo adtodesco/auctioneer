@@ -6,35 +6,99 @@
 
 {% block content %}
 <hr>
-<h3>Auction Rules</h3>
-<ul>
-    <li>There are six auction rounds that close every Sunday at 6 pm ET with 28 players per round.</li>
-    <li>The nomination period for each auction round runs from Monday morning through Thursday night.</li>
-    <li>Managers can nominate at least two players per round. If the round has not been filled by Thursday then managers can nominated a third player</li>
-    <li>All managers can bid on all nominated players. The nominating manager must have at least the minimum bid for any player they nominated.</li>
-    <li>The winning bid is revealed when the auction closes. This bid amount becomes the player's total salary.</li>
-    <li>If there's a tie, a tiebreaker order is used and the winning manager moves to the bottom of the order. The <a href="{{url_for('tiebreaker.index')}}">tiebreaker order page</a> shows the current order.</li>
-    <li>Managers with match rights have 24 hours after the auction closes to accept or decline the option to re-sign the player. Managers get match rights for players coming off of a 2+ year contract.</li>
-    <li>Once a player is won in auction, they will appear on the team's roster and the manager can sign them to a contract.</li>
-    <li>Contracts must meet the minimum requirements specified in the <a target="_blank" href="https://docs.google.com/spreadsheets/d/1kgbaJwiIzM4mq9iLhm8pI0_-MsZcjrV_YETkNyeBZZM/edit?usp=sharing">salary cap and contracts sheet</a>. Only valid contracts will be available on the signing page.</li>
-</ul>
 
-<h3>League Resources</h3>
-<ul>
-    <li><a target="_blank"
-            href="https://docs.google.com/document/d/1ZzluMv58VeK26Kr92LESMp3iYygCSPg42hGWftxtnYg/edit?usp=sharing">The
-            DOO Constitution</a></li>
-    <li><a target="_blank"
-            href="https://docs.google.com/spreadsheets/d/1kgbaJwiIzM4mq9iLhm8pI0_-MsZcjrV_YETkNyeBZZM/edit?usp=sharing">The
-            DOO Salary Cap and Contracts</a></li>
-    <li><a target="_blank"
-            href="https://docs.google.com/spreadsheets/d/1EotWb4G-UrB3Vcsy_ZN3enrWPmFrlWGvJFSMTY9A5bk/edit?usp=sharing">The
-            DOO 2025 FA Match Eligibility</a></li>
-</ul>
+<style>
+    .overview-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 1.5em;
+        margin-bottom: 2em;
+    }
+    .overview-section h3 {
+        margin-top: 0;
+        margin-bottom: 1em;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 0.5em;
+    }
+    .overview-section ul {
+        margin: 0;
+        padding-left: 1.5em;
+        line-height: 1.8;
+    }
+    .overview-section li {
+        margin-bottom: 0.4em;
+    }
+    .resources-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1em;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .resource-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 1em;
+        transition: box-shadow 0.2s;
+    }
+    .resource-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .resource-card a {
+        text-decoration: none;
+        color: #377ba8;
+        font-weight: 500;
+    }
+    .calendar-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1em;
+    }
+</style>
 
-<h3>Timeline</h3>
-<br>
-<div style="display: flex; justify-content: center;">
-    <iframe src="https://calendar.google.com/calendar/embed?src=bf21d348aec05136fc2b166d5abaf0d89feb6e88d4b795cbfcc3cc5deee99908%40group.calendar.google.com&ctz=America%2FNew_York" style="border: 0" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+<div class="overview-section">
+    <h3>Auction Rules</h3>
+    <ul>
+        <li>There are six auction rounds that close every Sunday at 6 pm ET with 28 players per round.</li>
+        <li>The nomination period for each auction round runs from Monday night through Thursday night.</li>
+        <li>Managers can nominate at least two players per round. If the round has not been filled by Thursday then managers can nominated a third player.</li>
+        <li>All managers can bid on all nominated players. The nominating manager must have at least the minimum bid for any player they nominated.</li>
+        <li>The winning bid is revealed when the auction closes. This bid amount becomes the player's total salary.</li>
+        <li>If there's a tie, a tiebreaker order is used and the winning manager moves to the bottom of the order. The <a href="{{url_for('tiebreaker.index')}}">tiebreaker order page</a> shows the current order.</li>
+        <li>Managers with match rights have 24 hours after the auction closes to accept or decline the option to re-sign the player. Managers get match rights for players coming off of a 2+ year contract.</li>
+        <li>Once a player is won in auction, they will appear on the team's roster and the manager can sign them to a contract.</li>
+        <li>Contracts must meet the minimum requirements specified in the <a target="_blank" href="https://docs.google.com/spreadsheets/d/1kgbaJwiIzM4mq9iLhm8pI0_-MsZcjrV_YETkNyeBZZM/edit?usp=sharing">salary cap and contracts sheet</a>. Only valid contracts will be available on the signing page.</li>
+    </ul>
+</div>
+
+<div class="overview-section">
+    <h3>League Resources</h3>
+    <ul class="resources-grid">
+        <li class="resource-card">
+            <a target="_blank" href="https://docs.google.com/document/d/1ZzluMv58VeK26Kr92LESMp3iYygCSPg42hGWftxtnYg/edit?usp=sharing">
+                📜 The DOO Constitution
+            </a>
+        </li>
+        <li class="resource-card">
+            <a target="_blank" href="https://docs.google.com/spreadsheets/d/1kgbaJwiIzM4mq9iLhm8pI0_-MsZcjrV_YETkNyeBZZM/edit?usp=sharing">
+                💰 Salary Cap and Contracts
+            </a>
+        </li>
+        <li class="resource-card">
+            <a target="_blank" href="https://docs.google.com/spreadsheets/d/1377eq-10FiJIPWxRm-a6yzlf0QWBMazKzBRNb6H8FoA/edit?usp=sharing">
+                🤝 2026 FA Match Eligibility
+            </a>
+        </li>
+    </ul>
+</div>
+
+<div class="overview-section">
+    <h3>Timeline</h3>
+    <div class="calendar-container">
+        <iframe src="https://calendar.google.com/calendar/embed?src=bf21d348aec05136fc2b166d5abaf0d89feb6e88d4b795cbfcc3cc5deee99908%40group.calendar.google.com&ctz=America%2FNew_York" style="border: 0; width: 100%; height: 600px;" frameborder="0" scrolling="no"></iframe>
+    </div>
 </div>
 {% endblock %}

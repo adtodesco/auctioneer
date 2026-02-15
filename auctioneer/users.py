@@ -1,6 +1,7 @@
 """User/Team management blueprint."""
 
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from werkzeug.security import generate_password_hash
 
 from . import db
 from .audit_log import log_audit
@@ -38,6 +39,7 @@ def edit(user_id):
         slack_id = request.form.get("slack_id", "")
         discord_id = request.form.get("discord_id", "")
         is_league_manager = request.form.get("is_league_manager") == "on"
+        new_password = request.form.get("new_password", "").strip()
 
         error = None
 
@@ -77,6 +79,12 @@ def edit(user_id):
             if user.is_league_manager != is_league_manager:
                 changes['is_league_manager'] = {'old': user.is_league_manager, 'new': is_league_manager}
 
+            # Handle password reset
+            password_changed = False
+            if new_password:
+                user.password = generate_password_hash(new_password)
+                password_changed = True
+
             # Apply changes
             user.team_name = team_name
             user.short_team_name = short_team_name
@@ -101,6 +109,19 @@ def edit(user_id):
                     old_values=old_values,
                     new_values=new_values,
                     is_sensitive=False,
+                    user=g.user
+                )
+
+            # Log password reset separately (sensitive)
+            if password_changed:
+                log_audit(
+                    action='update',
+                    entity_type='user',
+                    entity_id=user.id,
+                    description=f"Reset password for user {user.team_name}",
+                    old_values={},
+                    new_values={},
+                    is_sensitive=True,
                     user=g.user
                 )
 

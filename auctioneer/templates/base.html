@@ -15,9 +15,21 @@
         $(function () {
             $("select").select2();
         });
+
+        // Boss button keyboard shortcut (B key)
+        $(document).keydown(function(e) {
+            if (e.key === 'b' || e.key === 'B') {
+                // Check if we're not in an input/textarea
+                if (!$(e.target).is('input, textarea, select')) {
+                    window.location.href = "{{ url_for('auction.boss') }}";
+                }
+            }
+        });
     </script>
     {% endblock %}
 </head>
+
+<body>
 <nav>
     <img src="{{ url_for('static', filename='hammer.png') }}" width="30" height="30">
     <h1><a href="{{ url_for('auction.index') }}">The DOO Auction</a></h1>
@@ -35,6 +47,7 @@
             {% if g.user %}
             <li><span>{{ g.user['username'] }}</span>
             <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
+            <li><a href="{{ url_for('auction.boss') }}" style="opacity: 0.3;" title="Boss button (or press 'B')">📊</a>
                 {% else %}
             <li><a href="{{ url_for('auth.register') }}">Register</a>
             <li><a href="{{ url_for('auth.login') }}">Log In</a>
@@ -51,5 +64,6 @@
     {% endfor %}
     {% block content %}{% endblock %}
 </section>
+</body>
 
 </html>

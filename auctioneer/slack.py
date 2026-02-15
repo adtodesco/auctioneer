@@ -5,6 +5,7 @@ from flask import current_app
 from slack_sdk import WebhookClient
 
 from . import db
+from .config import get_notification_alert_hours
 from .model import Notification
 
 
@@ -42,8 +43,11 @@ def remove_nomination_period_begun_notification(round_number):
 
 
 def add_nomination_period_end_notification(
-    round_number, nominations_close_at, alert_hours=2
+    round_number, nominations_close_at, alert_hours=None
 ):
+    if alert_hours is None:
+        alert_hours = get_notification_alert_hours()
+
     nominations_close_at = nominations_close_at.replace(tzinfo=pytz.utc)
     nominations_close_at_et = nominations_close_at.astimezone(
         pytz.timezone("US/Eastern")
@@ -77,8 +81,11 @@ def remove_nomination_period_end_notification(round_number):
 
 
 def add_auctions_close_notification(
-    round_number, auctions_start_closing_at, alert_hours=2
+    round_number, auctions_start_closing_at, alert_hours=None
 ):
+    if alert_hours is None:
+        alert_hours = get_notification_alert_hours()
+
     notification = Notification(
         title=(
             f":rotating_light:  *Round {round_number} auctions close in {alert_hours} "

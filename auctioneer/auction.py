@@ -18,7 +18,16 @@ from werkzeug.exceptions import abort
 from auctioneer.tiebreaker import drop_to_tiebreaker_bottom
 
 from . import db
+from .audit_log import (
+    log_admin_player_sign,
+    log_bid,
+    log_match_decision,
+    log_nomination,
+    log_nomination_edit,
+    log_player_signed,
+)
 from .auth import admin_required, login_required
+from .config import get_match_time_hours, get_minimum_bid_value, get_minimum_total_salary, get_salary_cap
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
 from .slack import (
@@ -36,21 +45,29 @@ from .utils import (
 
 bp = Blueprint("auction", __name__)
 
-# TODO: Add this to a configuration page
-MINIMUM_BID_VALUE = 11
-MATCH_TIME_HOURS = 24
-MINIMUM_TOTAL_SALARY = {
-    2025: 11,
-    2026: 30,
-    2027: 57,
-    2028: 100,
-    2029: 160,
-    2030: 252,
-    2031: 378,
-    2032: 568,
-    2033: 828,
-    2034: 1190,
-}
+
+def get_contract_options_by_year(minimum_total_salary):
+    """Convert MINIMUM_TOTAL_SALARY indices (1-10) to calendar years.
+
+    Returns a dict mapping calendar years to minimum salary requirements.
+    For example: {2026: 12, 2027: 30, 2028: 60, ...}
+    """
+    if not minimum_total_salary:
+        return {}
+
+    salary_cap = get_salary_cap()
+    if not salary_cap:
+        return {}
+
+    base_year = min(salary_cap.keys())
+
+    # Convert indices to calendar years
+    result = {}
+    for contract_length, min_salary in minimum_total_salary.items():
+        end_year = base_year + contract_length - 1
+        result[end_year] = min_salary
+
+    return result
 
 
 @bp.route("/")
@@ -136,8 +153,9 @@ def nominate():
                 int(bid_value)
             except ValueError:
                 error = "Bid value must be an integer."
-            if int(bid_value) < MINIMUM_BID_VALUE:
-                error = f"Minimum bid value is ${MINIMUM_BID_VALUE}."
+            minimum_bid = get_minimum_bid_value()
+            if int(bid_value) < minimum_bid:
+                error = f"Minimum bid value is ${minimum_bid}."
 
         if error is not None:
             current_app.logger.error(
@@ -157,15 +175,30 @@ def nominate():
 
             db.session.add(nomination)
             db.session.add_all(users)
+
+            # Log audit event
+            log_nomination(nomination, g.user)
+
             db.session.commit()
 
             current_app.logger.info(f"User {g.user} created nomination {nomination}")
 
             add_player_nominated_notification(nomination)
             if nomination.player.matcher_id:
-                add_auction_match_notification(nomination, MATCH_TIME_HOURS)
+                add_auction_match_notification(nomination, get_match_time_hours())
 
             return redirect(url_for("auction.index"))
+
+    # Calculate reference table for minimum contracts
+    minimum_total_salary = get_contract_options_by_year(get_minimum_total_salary())
+    min_contracts = {}
+    if minimum_total_salary:
+        last_year = list(minimum_total_salary)[0] - 1
+        for year, min_salary in minimum_total_salary.items():
+            min_contracts[year] = {
+                'total': min_salary,
+                'annual': math.ceil(min_salary / (year - last_year))
+            }
 
     return render_template(
         "auction/nominate.html",
@@ -173,6 +206,7 @@ def nominate():
         positions=POSITIONS,
         users=users,
         players=players,
+        min_contracts=min_contracts,
     )
 
 
@@ -206,8 +240,9 @@ def bid(nomination_id):
                 int(value)
             except ValueError:
                 error = "Bid value must be an integer."
-            if int(value) < MINIMUM_BID_VALUE:
-                error = f"Minimum bid value is ${MINIMUM_BID_VALUE}."
+            minimum_bid = get_minimum_bid_value()
+            if int(value) < minimum_bid:
+                error = f"Minimum bid value is ${minimum_bid}."
 
         if error is not None:
             current_app.logger.error(
@@ -215,15 +250,31 @@ def bid(nomination_id):
             )
             flash(error)
         else:
+            old_value = user_bid.value if user_bid.value != "" else None
             user_bid.value = value
             db.session.add(user_bid)
+
+            # Log audit event (sensitive)
+            log_bid(nomination, g.user, old_value, value)
+
             db.session.commit()
             current_app.logger.info(
                 f"User {g.user} updated bid on nomination {nomination}"
             )
             return redirect(url_for("auction.index"))
 
-    return render_template("auction/bid.html", nomination=nomination, bid=user_bid)
+    # Calculate reference table for minimum contracts
+    minimum_total_salary = get_contract_options_by_year(get_minimum_total_salary())
+    min_contracts = {}
+    if minimum_total_salary:
+        last_year = list(minimum_total_salary)[0] - 1
+        for year, min_salary in minimum_total_salary.items():
+            min_contracts[year] = {
+                'total': min_salary,
+                'annual': math.ceil(min_salary / (year - last_year))
+            }
+
+    return render_template("auction/bid.html", nomination=nomination, bid=user_bid, min_contracts=min_contracts)
 
 
 @bp.route("/<int:nomination_id>/match/", methods=["GET", "POST"])
@@ -237,16 +288,33 @@ def match(nomination_id):
         is_match = request.form["match"] == "yes"
         if is_match:
             user_bid = get_user_bid_for_nomination(g.user.id, nomination.id)
-            user_bid.value = nomination.bids[0].value
+
+            # Apply hometown discount if applicable
+            if nomination.player.hometown_discount:
+                discounted_value = int(nomination.bids[0].value * 0.9)
+                # Enforce minimum bid value
+                user_bid.value = max(discounted_value, get_minimum_bid_value())
+            else:
+                user_bid.value = nomination.bids[0].value
+
             nomination.player.manager_id = g.user.id
             db.session.add(user_bid)
             db.session.add(nomination)
+
+            # Log audit event (sensitive)
+            log_match_decision(nomination, accepted=True, user=g.user)
+
             db.session.commit()
             current_app.logger.info(
                 f"Match for nomination {nomination} accepted by {g.user}."
             )
         else:
             close_nomination(nomination)
+
+            # Log audit event (sensitive)
+            log_match_decision(nomination, accepted=False, user=g.user)
+            db.session.commit()
+
             current_app.logger.info(
                 f"Match for nomination {nomination} declined by {g.user}."
             )
@@ -256,7 +324,19 @@ def match(nomination_id):
 
         return redirect(url_for("auction.index"))
 
-    return render_template("auction/match.html", nomination=nomination, bid=bid)
+    # Calculate discounted bid value for display
+    winning_bid = nomination.bids[0].value if nomination.bids else 0
+    discounted_bid = None
+    if nomination.player.hometown_discount and winning_bid:
+        discounted_value = int(winning_bid * 0.9)
+        discounted_bid = max(discounted_value, get_minimum_bid_value())
+
+    return render_template(
+        "auction/match.html",
+        nomination=nomination,
+        winning_bid=winning_bid,
+        discounted_bid=discounted_bid
+    )
 
 
 @bp.route("/<int:nomination_id>/edit/", methods=["GET", "POST"])
@@ -293,6 +373,27 @@ def edit(nomination_id):
                 )
                 flash(error)
             else:
+                # Track changes for audit log
+                changes = {}
+                old_slot_id = nomination.slot_id
+                old_winner_id = nomination.player.manager_id
+
+                if old_slot_id != int(slot_id):
+                    old_slot = db.session.get(Slot, old_slot_id)
+                    new_slot = db.session.get(Slot, int(slot_id))
+                    changes['slot'] = {
+                        'old': f"Round {old_slot.round} - {old_slot.closes_at}" if old_slot else None,
+                        'new': f"Round {new_slot.round} - {new_slot.closes_at}" if new_slot else None
+                    }
+
+                if old_winner_id != (int(winner_id) if winner_id else None):
+                    old_winner = db.session.get(User, old_winner_id) if old_winner_id else None
+                    new_winner = db.session.get(User, int(winner_id)) if winner_id else None
+                    changes['winner'] = {
+                        'old': old_winner.team_name if old_winner else None,
+                        'new': new_winner.team_name if new_winner else None
+                    }
+
                 if nomination.player.matcher_id:
                     remove_auction_match_notification(nomination)
                 if (
@@ -303,11 +404,16 @@ def edit(nomination_id):
                 nomination.slot_id = slot_id
                 nomination.player.manager_id = winner_id
                 db.session.add(nomination)
+
+                # Log audit event if there were changes
+                if changes:
+                    log_nomination_edit(nomination, changes, user=g.user)
+
                 db.session.commit()
                 current_app.logger.info(f"Nomination {nomination} updated by {g.user}.")
                 if nomination.player.matcher_id:
                     # TODO: Only add if notification hasn't been sent yet
-                    add_auction_match_notification(nomination, MATCH_TIME_HOURS)
+                    add_auction_match_notification(nomination, get_match_time_hours())
                 return redirect(url_for("auction.index"))
 
     users = db.session.execute(db.select(User).order_by(User.team_name)).scalars().all()
@@ -337,9 +443,10 @@ def sign(player_id):
     # Not sure why player.nomination returns a list, but it should always be len 1 so
     # this should be fine.
     user_bid = get_user_bid_for_nomination(g.user.id, player.nomination[0].id)
-    last_year = list(MINIMUM_TOTAL_SALARY)[0] - 1
+    minimum_total_salary = get_contract_options_by_year(get_minimum_total_salary())
+    last_year = list(minimum_total_salary)[0] - 1
     options = dict()
-    for year, salary in MINIMUM_TOTAL_SALARY.items():
+    for year, salary in minimum_total_salary.items():
         if user_bid.value >= salary:
             options[year] = math.ceil(user_bid.value / (year - last_year))
 
@@ -369,6 +476,10 @@ def sign(player_id):
             player.contract = contract
             player.salary = options[contract]
             db.session.add(player)
+
+            # Log audit event
+            log_player_signed(player, contract, options[contract], user=g.user)
+
             db.session.commit()
             current_app.logger.info(
                 f"Player contract set to {contract} with salary {options[contract]} by "
@@ -376,7 +487,129 @@ def sign(player_id):
             )
             return redirect(url_for("rosters.index"))
 
-    return render_template("auction/sign.html", player=player, options=options)
+    # Calculate reference table for minimum contracts
+    min_contracts = {}
+    for year, min_salary in minimum_total_salary.items():
+        min_contracts[year] = {
+            'total': min_salary,
+            'annual': math.ceil(min_salary / (year - last_year))
+        }
+
+    return render_template(
+        "auction/sign.html",
+        player=player,
+        options=options,
+        min_contracts=min_contracts,
+        user_bid=user_bid.value
+    )
+
+
+@bp.route("/admin/sign/<int:player_id>/", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_sign(player_id):
+    """Admin route to sign a player on behalf of any manager."""
+    player = db.session.get(Player, player_id)
+    if player is None:
+        abort(404, f"Player for id {player_id} doesn't exist.")
+
+    # Get all users for manager selection
+    users = db.session.execute(db.select(User).order_by(User.team_name)).scalars().all()
+
+    if request.method == "POST":
+        manager_id = request.form.get("manager_id")
+        contract = request.form.get("contract")
+
+        error = None
+
+        if not manager_id:
+            error = "Manager is required."
+        elif not contract:
+            error = "Contract is required."
+
+        if not error:
+            try:
+                manager_id = int(manager_id)
+                contract = int(contract)
+            except ValueError:
+                error = "Invalid manager or contract value."
+
+        if not error:
+            # Get the manager's bid for this nomination
+            if not player.nomination:
+                error = "Player has no associated nomination."
+            else:
+                user_bid = get_user_bid_for_nomination(manager_id, player.nomination[0].id)
+                if not user_bid:
+                    error = "Selected manager has no bid for this player."
+
+        if not error:
+            # Calculate contract options based on bid value
+            minimum_total_salary = get_contract_options_by_year(get_minimum_total_salary())
+            last_year = list(minimum_total_salary)[0] - 1
+            options = dict()
+            for year, salary in minimum_total_salary.items():
+                if user_bid.value >= salary:
+                    options[year] = math.ceil(user_bid.value / (year - last_year))
+
+            if contract not in options:
+                error = "Invalid contract option for this bid value."
+
+        if error:
+            flash(error, "error")
+        else:
+            # Assign player to selected manager
+            manager = db.session.get(User, manager_id)
+            player.manager_id = manager_id
+            player.contract = contract
+            player.salary = options[contract]
+            db.session.add(player)
+
+            # Log audit event
+            log_admin_player_sign(player, manager, contract, options[contract], user=g.user)
+
+            db.session.commit()
+
+            current_app.logger.info(
+                f"Admin {g.user} signed player {player.name} to {manager.team_name} "
+                f"with contract {contract} and salary {options[contract]}."
+            )
+            flash(f"Player {player.name} signed to {manager.team_name}.", "success")
+            return redirect(url_for("admin.players.index"))
+
+    # Calculate contract options for display (if player has nomination)
+    contract_options_by_user = {}
+    minimum_total_salary = get_contract_options_by_year(get_minimum_total_salary())
+    last_year = list(minimum_total_salary)[0] - 1
+
+    if player.nomination:
+        for user in users:
+            user_bid = get_user_bid_for_nomination(user.id, player.nomination[0].id)
+            if user_bid:
+                options = dict()
+                for year, salary in minimum_total_salary.items():
+                    if user_bid.value >= salary:
+                        options[year] = math.ceil(user_bid.value / (year - last_year))
+                contract_options_by_user[user.id] = {
+                    "bid": user_bid.value,
+                    "options": options
+                }
+
+    # Calculate reference table for minimum contracts
+    min_contracts = {}
+    for year, min_salary in minimum_total_salary.items():
+        min_contracts[year] = {
+            'total': min_salary,
+            'annual': math.ceil(min_salary / (year - last_year))
+        }
+
+    return render_template(
+        "auction/admin_sign.html",
+        player=player,
+        users=users,
+        contract_options=contract_options_by_user,
+        min_contracts=min_contracts
+    )
 
 
 @bp.route("/results/")
@@ -487,3 +720,9 @@ def convert_slots_timezone(slots, from_tz, to_tz):
         )
 
     return slots
+
+
+@bp.route("/boss")
+def boss():
+    """Boss button - shows a fake spreadsheet for when the boss walks by."""
+    return render_template("boss.html", now=datetime.now())

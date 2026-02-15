@@ -1,21 +1,93 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Bid for {{ nomination.player.name }} | {{nomination.player.team }} | {{
-    nomination.player.position.replace(",", ", ") }}{% endblock %}</h1>
+<h1>{% block title %}Place Bid{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
 <hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row {
+        margin-bottom: 1em;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .form-row input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        max-width: 200px;
+    }
+</style>
+
 <form method="post">
-    <label for="value">Enter bid below. Your bid will become the players total salary if you win this player's
-        auction.</label>
-    <input name="value" id="value" value="{{ request.form['value'] or bid.value }}" required>
+    <div class="form-section">
+        <h3>{{ nomination.player.name }} | {{nomination.player.team }} | {{ nomination.player.position.replace(",", ", ") }}</h3>
+
+        <div class="form-row">
+            <label for="value">Bid Value</label>
+            <input name="value" id="value" type="number" value="{{ request.form['value'] or bid.value }}" required>
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                Your bid will become the player's total salary if you win this auction
+            </small>
+        </div>
+
+        <hr style="margin: 1.5em 0; border: none; border-top: 1px solid #ddd;">
+
+        <h4 style="margin-top: 0; margin-bottom: 0.5em; font-weight: normal;">Major League Minimum Contracts</h4>
+        <p style="margin-bottom: 1em; color: #666; font-size: 0.9em;">Reference table showing minimum salary requirements by contract end year</p>
+
+        <table style="border: 1px solid #ddd; width: 100%; border-collapse: collapse; background: white;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ddd; padding: 0.5em; font-weight: normal;">Contract End Year</th>
+            {% for year, values in min_contracts.items()|sort %}
+            <th style="border: 1px solid #ddd; padding: 0.5em; font-weight: normal;">{{ year }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Annual Salary</td>
+            {% for year, values in min_contracts.items()|sort %}
+            <td style="border: 1px solid #ddd; padding: 0.5em;">${{ values.annual }}</td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">Total Salary</td>
+            {% for year, values in min_contracts.items()|sort %}
+            <td style="border: 1px solid #ddd; padding: 0.5em;">${{ values.total }}</td>
+            {% endfor %}
+        </tr>
+        </tbody>
+        </table>
+    </div>
+
     <div class="submit-buttons">
         <input type="submit" name="action" value="Save">
         {% if g.user.id != nomination.nominator_id %}
         <input type="submit" name="action" value="Reset" class="danger">
+        {% endif %}
     </div>
-    {% endif %}
 </form>
 {% endblock %}

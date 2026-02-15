@@ -24,51 +24,63 @@
 <div class="roster">
     <div class="players">
         {% if players %}
-        <table>
-            <tr>
-                <th>Player</th>
-                <th>Team</th>
-                <th>Position</th>
-                <th>Salary</th>
-                <th>Contract</th>
-                <th></th>
-            </tr>
-            {% for player in players %}
-            <tr {% if player.nomination %} class="signed" {% endif %}>
-                <td>{{ player["name"] }}</td>
-                <td>{{ player["team"] }}</td>
-                <td>{{ player["position"] }}</td>
-                <td class="number">{% if player.salary %}${{ player["salary"] }}{% else %}--{% endif %}</td>
-                <td class="number">{% if player.contract %}{{ player["contract"] }}{% else %}--{% endif %}</td>
-                <td>{% if player.nomination and player.nomination[0].player.manager_user == g.user %}<a class="action"
-                        href="{{ url_for('auction.sign', player_id=player.id) }}">Sign</a>{% endif %}</td>
-            </tr>
-            {% endfor %}
+        <div style="max-height: calc(100vh - 250px); overflow-y: auto; border: 1px solid #ddd;">
+        <table style="border-collapse: collapse; table-layout: fixed; width: 100%;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 180px; position: sticky; top: 0; background: white;">Player</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 60px; position: sticky; top: 0; background: white;">Team</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 100px; position: sticky; top: 0; background: white;">Position</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 80px; position: sticky; top: 0; background: white;">Salary</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 80px; position: sticky; top: 0; background: white;">Contract</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 60px; position: sticky; top: 0; background: white;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr {% if player.nomination %} class="signed" {% endif %}>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player["name"] }}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player["team"] }}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player["position"] }}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">{% if player.salary %}${{ player["salary"] }}{% else %}--{% endif %}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">{% if player.contract %}{{ player["contract"] }}{% else %}--{% endif %}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">{% if player.nomination and player.nomination[0].player.manager_user == g.user %}<a class="action"
+                            href="{{ url_for('auction.sign', player_id=player.id) }}">Sign</a>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
+        </div>
         {% else %}
         <p>No players on team <b>{{ selected_user.team_name }}</b> - this team may not exist.</p>
         {% endif %}
     </div>
-    <div class="salary">
-        <table>
-            <tr>
-                <th>Year</th>
-                <th>Players</th>
-                <th>Team Salary</th>
-                <th>Salary Cap</th>
-                <th>Cap Space</th>
-            </tr>
-            {% for year, cap in salary_cap.items() %}
-            <tr>
-                <td>{{ year }}</td>
-                <td class="number">{{ team_salary[year]['players'] }}</td>
-                <td class="number">${{ team_salary[year]['salary'] }}</td>
-                <td class="number">${{ cap }}</td>
-                <td class="number">${{ cap - team_salary[year]['salary'] }}</td>
-            </tr>
-            {% endfor %}
+    <div class="salary" style="margin-left: 2em;">
+        <div style="max-height: calc(100vh - 250px); overflow-y: auto; border: 1px solid #ddd;">
+        <table style="border-collapse: collapse; table-layout: fixed;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 60px; position: sticky; top: 0; background: white;">Year</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 70px; position: sticky; top: 0; background: white;">Players</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 100px; position: sticky; top: 0; background: white;">Team Salary</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 90px; position: sticky; top: 0; background: white;">Salary Cap</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 90px; position: sticky; top: 0; background: white;">Cap Space</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for year, cap in salary_cap.items() %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">{{ year }}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">{{ team_salary[year]['players'] }}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">${{ team_salary[year]['salary'] }}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">${{ cap }}</td>
+                    <td style="border: 1px solid #ddd; padding: 0.5em;">${{ cap - team_salary[year]['salary'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
-        <i>Team salary/cap space does not include cap hit penalties for dropped players.</i>
+        </div>
+        <i style="display: block; margin-top: 0.5em;">Team salary/cap space does not include cap hit penalties for dropped players.</i>
     </div>
 </div>
 {% endblock %}

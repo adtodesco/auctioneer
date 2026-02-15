@@ -22,9 +22,9 @@
             <td style="border: 1px solid #ddd; padding: 0.5em;">{{ config.key }}</td>
             <td style="border: 1px solid #ddd; padding: 0.5em;">{{ config.value_type }}</td>
             <td style="border: 1px solid #ddd; padding: 0.5em;">{{ config.description or '-' }}</td>
-            <td style="border: 1px solid #ddd; padding: 0.5em;">
+            <td style="border: 1px solid #ddd; padding: 0.5em; word-wrap: break-word; max-width: 400px;">
                 {% if config.value_type == 'json' %}
-                <pre style="margin: 0; max-width: 400px; overflow: auto;">{{ config.value }}</pre>
+                <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">{{ config.value }}</pre>
                 {% else %}
                 {{ config.value }}
                 {% endif %}

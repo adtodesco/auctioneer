@@ -9,11 +9,23 @@
 
 {% block content %}
 <hr>
-<ol>
-    {% for user in users %}
-    {% if user.tiebreaker_order %}
-    <li>{{ user.team_name }}</li>
-    {% endif %}
-    {% endfor %}
-</ol>
+
+<table style="border: 1px solid #ddd; border-collapse: collapse; max-width: 600px;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #ddd; padding: 0.5em; width: 80px;">Order</th>
+            <th style="border: 1px solid #ddd; padding: 0.5em;">Team</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        {% if user.tiebreaker_order %}
+        <tr>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ user.tiebreaker_order }}</td>
+            <td style="border: 1px solid #ddd; padding: 0.5em;">{{ user.team_name }}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}
