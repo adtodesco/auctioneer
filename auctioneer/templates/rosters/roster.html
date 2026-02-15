@@ -24,16 +24,16 @@
 <div class="roster">
     <div class="players">
         {% if players %}
-        <div style="max-height: calc(100vh - 250px); overflow-y: auto; border: 1px solid #ddd;">
-        <table style="border-collapse: collapse; table-layout: fixed; width: 100%;">
+        <div style="max-height: calc(100vh - 250px); overflow-y: auto; overflow-x: auto; border: 1px solid #ddd;">
+        <table style="border-collapse: collapse; width: 100%; min-width: 600px;">
             <thead>
                 <tr>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 180px; position: sticky; top: 0; background: white;">Player</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 60px; position: sticky; top: 0; background: white;">Team</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 100px; position: sticky; top: 0; background: white;">Position</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 80px; position: sticky; top: 0; background: white;">Salary</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 80px; position: sticky; top: 0; background: white;">Contract</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 60px; position: sticky; top: 0; background: white;"></th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Player</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Team</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Position</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Salary</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Contract</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;"></th>
                 </tr>
             </thead>
             <tbody>
@@ -56,15 +56,15 @@
         {% endif %}
     </div>
     <div class="salary" style="margin-left: 2em;">
-        <div style="max-height: calc(100vh - 250px); overflow-y: auto; border: 1px solid #ddd;">
-        <table style="border-collapse: collapse; table-layout: fixed;">
+        <div style="max-height: calc(100vh - 250px); overflow-y: auto; overflow-x: auto; border: 1px solid #ddd;">
+        <table style="border-collapse: collapse; width: 100%; min-width: 450px;">
             <thead>
                 <tr>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 60px; position: sticky; top: 0; background: white;">Year</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 70px; position: sticky; top: 0; background: white;">Players</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 100px; position: sticky; top: 0; background: white;">Team Salary</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 90px; position: sticky; top: 0; background: white;">Salary Cap</th>
-                    <th style="border: 1px solid #ddd; padding: 0.5em; width: 90px; position: sticky; top: 0; background: white;">Cap Space</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Year</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Players</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Team Salary</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Salary Cap</th>
+                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Cap Space</th>
                 </tr>
             </thead>
             <tbody>

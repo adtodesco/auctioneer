@@ -227,4 +227,213 @@ input[type=reset] {
     margin-left: auto;
     margin-right: auto;
     width: 50%;
-  }
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+    /* Reduce overall padding */
+    html {
+        padding: 0.5rem;
+    }
+
+    body {
+        max-width: 100%;
+    }
+
+    /* Hide background image on mobile for better readability */
+    html {
+        background-image: none !important;
+    }
+
+    /* Mobile navigation */
+    nav {
+        flex-direction: column;
+        padding: 0.5rem;
+    }
+
+    nav > img {
+        display: none; /* Hide logo on mobile to save space */
+    }
+
+    nav h1 {
+        font-size: 1.2em;
+        margin: 0.25rem;
+        text-align: center;
+        width: 100%;
+    }
+
+    nav div {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    nav ul {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    nav ul li {
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid #ccc;
+    }
+
+    nav ul li:last-child {
+        border-bottom: none;
+    }
+
+    nav ul li a,
+    nav ul li span {
+        padding: 0.75rem;
+        width: 100%;
+    }
+
+    /* Content area */
+    .content {
+        padding: 0 0.5rem 0.5rem;
+    }
+
+    .content h1 {
+        font-size: 1.3em;
+    }
+
+    /* Reduce header margins */
+    h1, h2, h3, h4, h5, h6 {
+        margin: 0.5rem 0;
+    }
+
+    /* Forms */
+    .content form {
+        margin: 0.5em 0;
+    }
+
+    .content label {
+        font-size: 0.95em;
+    }
+
+    .content input,
+    .content textarea,
+    .content select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    input[type=submit],
+    input[type=reset] {
+        width: 100%;
+        max-width: none;
+    }
+
+    .submit-buttons {
+        flex-direction: column;
+        row-gap: 10px;
+    }
+
+    /* Tables - make scrollable horizontally */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        font-size: 0.9em;
+    }
+
+    th, td {
+        padding: 0.4em 0.5em;
+        padding-right: 8px;
+    }
+
+    /* Nomination cards */
+    .nomination {
+        padding: 0 0.5em 0.5em;
+    }
+
+    .nomination h3 {
+        font-size: 1.1em;
+        word-break: break-word;
+    }
+
+    .nomination .about,
+    .nomination .status,
+    .nomination .match,
+    .nomination .bid,
+    .nomination .sign,
+    .nomination .bids {
+        font-size: 0.9em;
+    }
+
+    .nomination > .modifiable {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .nomination > .modifiable .action {
+        margin-top: 0.5em;
+        width: 100%;
+        text-align: center;
+    }
+
+    .content > .modifiable {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .content > .modifiable .action {
+        margin-top: 0.5em;
+    }
+
+    /* Rosters page - stack instead of side-by-side */
+    .roster {
+        flex-direction: column;
+    }
+
+    .players {
+        flex: 100%;
+        margin-bottom: 1em;
+    }
+
+    .salary {
+        margin-left: 0 !important;
+    }
+
+    /* Teams navigation */
+    .teams {
+        font-size: 0.85em;
+        line-height: 1.6;
+        word-wrap: break-word;
+    }
+
+    /* Overview page */
+    .overview-section {
+        padding: 1em;
+        margin-bottom: 1em;
+    }
+
+    .overview-section ul {
+        font-size: 0.9em;
+        line-height: 1.6;
+    }
+
+    .resources-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar-container iframe {
+        height: 400px !important;
+    }
+
+    /* Flash messages */
+    .flash {
+        margin: 0.5em 0;
+        padding: 0.75em;
+        font-size: 0.9em;
+    }
+
+    /* Reduce form section padding on mobile */
+    .form-section {
+        padding-bottom: 0.5em;
+    }
+
+    /* Select2 dropdowns */
+    .select2-container {
+        font-size: 16px;
+    }
+}
