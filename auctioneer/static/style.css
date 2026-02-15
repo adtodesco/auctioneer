@@ -68,10 +68,20 @@ nav h1 a {
     padding: 0.25rem 0.5rem;
 }
 
-nav div {
+.nav-menu {
     flex: auto;
     display: flex;
     justify-content: space-between;
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-left: auto;
 }
 
 nav ul {
@@ -247,43 +257,56 @@ input[type=reset] {
 
     /* Mobile navigation */
     nav {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
         padding: 0.5rem;
+        position: relative;
     }
 
     nav > img {
-        display: none; /* Hide logo on mobile to save space */
+        width: 24px;
+        height: 24px;
     }
 
     nav h1 {
         font-size: 1.2em;
         margin: 0.25rem;
-        text-align: center;
-        width: 100%;
+        flex: 1;
     }
 
-    nav div {
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background: lightgray;
+        margin-top: 0.5rem;
+    }
+
+    .nav-menu.show {
+        display: flex;
+    }
+
+    .nav-menu ul {
         flex-direction: column;
         width: 100%;
     }
 
-    nav ul {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    nav ul li {
+    .nav-menu ul li {
         width: 100%;
         text-align: center;
         border-bottom: 1px solid #ccc;
     }
 
-    nav ul li:last-child {
+    .nav-menu ul li:last-child {
         border-bottom: none;
     }
 
-    nav ul li a,
-    nav ul li span {
+    .nav-menu ul li a,
+    .nav-menu ul li span {
         padding: 0.75rem;
         width: 100%;
     }
