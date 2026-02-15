@@ -145,9 +145,9 @@ def get_urgent_threshold_hours():
     return get_config("URGENT_THRESHOLD_HOURS", 24)
 
 
-def get_notification_alert_hours():
-    """Get the number of hours before an event to send alert notifications."""
-    return get_config("NOTIFICATION_ALERT_HOURS", 2)
+def get_notification_alert_minutes():
+    """Get the number of minutes before an event to send alert notifications."""
+    return get_config("NOTIFICATION_ALERT_MINUTES", 2)
 
 
 def get_webhook_url():

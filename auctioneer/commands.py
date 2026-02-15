@@ -106,9 +106,9 @@ def init_db():
             value_type="int",
         ),
         Config(
-            key="NOTIFICATION_ALERT_HOURS",
+            key="NOTIFICATION_ALERT_MINUTES",
             value="2",
-            description="Hours before an event to send alert notifications",
+            description="Minutes before an event to send alert notifications",
             value_type="int",
         ),
         Config(

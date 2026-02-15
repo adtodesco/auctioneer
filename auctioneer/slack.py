@@ -5,7 +5,7 @@ from flask import current_app
 from slack_sdk import WebhookClient
 
 from . import db
-from .config import get_notification_alert_hours
+from .config import get_notification_alert_minutes
 from .model import Notification
 
 
@@ -43,10 +43,10 @@ def remove_nomination_period_begun_notification(round_number):
 
 
 def add_nomination_period_end_notification(
-    round_number, nominations_close_at, alert_hours=None
+    round_number, nominations_close_at, alert_minutes=None
 ):
-    if alert_hours is None:
-        alert_hours = get_notification_alert_hours()
+    if alert_minutes is None:
+        alert_minutes = get_notification_alert_minutes()
 
     nominations_close_at = nominations_close_at.replace(tzinfo=pytz.utc)
     nominations_close_at_et = nominations_close_at.astimezone(
@@ -55,16 +55,16 @@ def add_nomination_period_end_notification(
 
     notification = Notification(
         title=(
-            f":envelope:  *Round {round_number} nomination period ends in {alert_hours}"
-            f" hours!*"
+            f":envelope:  *Round {round_number} nomination period ends in {alert_minutes}"
+            f" minutes!*"
         ),
         message=(
             f"Round {round_number} nomination period ends in "
-            f"{alert_hours} hours. If you have not made your round {round_number} "
+            f"{alert_minutes} minutes. If you have not made your round {round_number} "
             f"nominations head to thedooauction.com to make them by "
             f"{nominations_close_at_et.strftime('%Y-%m-%d @ %-I:%M %p')} ET."
         ),
-        send_at=nominations_close_at - timedelta(hours=alert_hours),
+        send_at=nominations_close_at - timedelta(minutes=alert_minutes),
     )
 
     db.session.add(notification)
@@ -81,22 +81,22 @@ def remove_nomination_period_end_notification(round_number):
 
 
 def add_auctions_close_notification(
-    round_number, auctions_start_closing_at, alert_hours=None
+    round_number, auctions_start_closing_at, alert_minutes=None
 ):
-    if alert_hours is None:
-        alert_hours = get_notification_alert_hours()
+    if alert_minutes is None:
+        alert_minutes = get_notification_alert_minutes()
 
     notification = Notification(
         title=(
-            f":rotating_light:  *Round {round_number} auctions close in {alert_hours} "
-            f"hours!*"
+            f":rotating_light:  *Round {round_number} auctions close in {alert_minutes} "
+            f"minutes!*"
         ),
         message=(
-            f"Round {round_number} auctions will start closing in {alert_hours} hours. "
+            f"Round {round_number} auctions will start closing in {alert_minutes} minutes. "
             f"Get your bids in and make your final adjustments before the clock runs "
             f"out!"
         ),
-        send_at=auctions_start_closing_at - timedelta(hours=alert_hours),
+        send_at=auctions_start_closing_at - timedelta(minutes=alert_minutes),
     )
 
     db.session.add(notification)
