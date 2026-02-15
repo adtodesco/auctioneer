@@ -6,21 +6,72 @@
 
 {% block content %}
 <hr>
+
+<style>
+    .form-section {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 1.5em 1.5em 0.8em 1.5em;
+        margin-bottom: 1.5em;
+        border-radius: 4px;
+    }
+    .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 0.3em;
+        color: #333;
+    }
+    .form-section p {
+        margin: 0 0 1em 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .form-row {
+        margin-bottom: 1em;
+    }
+    .form-row label {
+        display: block;
+        margin-bottom: 0.3em;
+        font-weight: normal;
+    }
+    .hometown-discount {
+        background: #e8f5e9;
+        border: 1px solid #81c784;
+        padding: 1em;
+        margin: 1em 0;
+        border-radius: 4px;
+    }
+</style>
+
 <form method="post">
-    {% if discounted_bid %}
-    <label for="match">
-        Match the ${{ winning_bid }} bid and re-sign {{ nomination.player.name }}?<br>
-        <strong>Hometown discount applies: Your cost will be ${{ discounted_bid }} (90% of winning bid)</strong>
-    </label>
-    {% else %}
-    <label for="match">Match the ${{ winning_bid }} bid and re-sign {{ nomination.player.name }}?</label>
-    {% endif %}
-    <select name="match" id="match" required>
-        <option disabled selected value="">-- Select yes or no --</option>
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-    </select>
-    <input type="submit" value="Save">
+    <div class="form-section">
+        <h3>{{ nomination.player.name }} | {{ nomination.player.team }} | {{ nomination.player.position.replace(",", ", ") }}</h3>
+
+        {% if discounted_bid %}
+        <div class="hometown-discount">
+            <strong>Hometown Discount Available</strong><br>
+            Original winning bid: ${{ winning_bid }}<br>
+            Your discounted cost: <strong>${{ discounted_bid }}</strong> (90% of winning bid)
+        </div>
+        {% endif %}
+
+        <div class="form-row">
+            <label for="match">
+                {% if discounted_bid %}
+                Do you want to match and re-sign {{ nomination.player.name }} for ${{ discounted_bid }}?
+                {% else %}
+                Do you want to match the ${{ winning_bid }} bid and re-sign {{ nomination.player.name }}?
+                {% endif %}
+            </label>
+            <select name="match" id="match" required>
+                <option disabled selected value="">-- Select yes or no --</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="submit-buttons">
+        <input type="submit" value="Save">
+    </div>
 </form>
-<hr>
 {% endblock %}

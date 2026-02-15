@@ -46,7 +46,6 @@
     </div>
     {% endif %}
 </div>
-<hr>
 {% endfor %}
 
 {% for nomination in match_nominations %}
@@ -75,7 +74,6 @@
         {% endif %}
     </div>
 </div>
-<hr>
 {% endfor %}
 
 {% for nomination in closed_nominations %}
@@ -113,7 +111,6 @@
             nomination.Nomination.bids[1:] %}{% if bid.value %}, ${{ bid.value }}{% endif %}{% endfor %}</p>
     </div>
 </div>
-<hr>
 {% endfor %}
 {% endif %}
 {% endblock %}
