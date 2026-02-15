@@ -193,15 +193,11 @@ def remove_auction_match_notification(nomination):
 def send_notification(notification, webhook_url):
     """Send a notification via Discord webhook.
 
-    Discord webhook format is different from Slack - uses 'content' and 'embeds'.
+    Uses plain formatted text (no embeds) for cleaner appearance.
     """
-    # Build Discord embed
+    # Build Discord message with plain formatting
     payload = {
-        "content": notification.title,
-        "embeds": [{
-            "description": notification.message,
-            "color": 3447003  # Blue color
-        }]
+        "content": f"{notification.title}\n\n{notification.message}"
     }
 
     try:
