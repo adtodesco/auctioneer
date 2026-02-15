@@ -110,7 +110,13 @@ def remove_auctions_close_notification(round_number):
 
 
 def add_player_nominated_notification(nomination):
-    user_mention = f"<@{nomination.nominator_user.discord_id}>" if nomination.nominator_user.discord_id else nomination.nominator_user.team_name
+    # Only use discord_id if it's valid (numeric) - otherwise fall back to team name
+    discord_id = nomination.nominator_user.discord_id
+    if discord_id and discord_id.isdigit():
+        user_mention = f"<@{discord_id}>"
+    else:
+        user_mention = f"**{nomination.nominator_user.team_name}**"
+
     notification = Notification(
         title=":mega: **A player has been nominated!**",
         message=(
@@ -126,7 +132,13 @@ def add_player_nominated_notification(nomination):
 
 
 def add_auction_won_notification(nomination):
-    user_mention = f"<@{nomination.player.manager_user.discord_id}>" if nomination.player.manager_user.discord_id else nomination.player.manager_user.team_name
+    # Only use discord_id if it's valid (numeric) - otherwise fall back to team name
+    discord_id = nomination.player.manager_user.discord_id
+    if discord_id and discord_id.isdigit():
+        user_mention = f"<@{discord_id}>"
+    else:
+        user_mention = f"**{nomination.player.manager_user.team_name}**"
+
     notification = Notification(
         title=":moneybag: **An auction has been won!**",
         message=(
@@ -148,7 +160,13 @@ MATCH_NOTIFICATION_TITLE = (
 
 
 def add_auction_match_notification(nomination, match_time_hours):
-    user_mention = f"<@{nomination.player.matcher_user.discord_id}>" if nomination.player.matcher_user.discord_id else nomination.player.matcher_user.team_name
+    # Only use discord_id if it's valid (numeric) - otherwise fall back to team name
+    discord_id = nomination.player.matcher_user.discord_id
+    if discord_id and discord_id.isdigit():
+        user_mention = f"<@{discord_id}>"
+    else:
+        user_mention = f"**{nomination.player.matcher_user.team_name}**"
+
     notification = Notification(
         title=MATCH_NOTIFICATION_TITLE,
         message=(
