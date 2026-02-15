@@ -108,6 +108,7 @@ def remove_auctions_close_notification(round_number):
 
 
 def add_player_nominated_notification(nomination):
+    user_mention = f"<@{nomination.nominator_user.slack_id}>" if nomination.nominator_user.slack_id else nomination.nominator_user.team_name
     notification = Notification(
         title=":mega:  A player has been nominated!",
         message=(
