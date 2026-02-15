@@ -15,26 +15,26 @@
     <script>
         $(function () {
             $("select").select2();
-        });
 
-        // Boss button keyboard shortcut (B key)
-        $(document).keydown(function(e) {
-            if (e.key === 'b' || e.key === 'B') {
-                // Check if we're not in an input/textarea
-                if (!$(e.target).is('input, textarea, select')) {
-                    window.location.href = "{{ url_for('auction.boss') }}";
+            // Boss button keyboard shortcut (B key)
+            $(document).keydown(function(e) {
+                if (e.key === 'b' || e.key === 'B') {
+                    // Check if we're not in an input/textarea
+                    if (!$(e.target).is('input, textarea, select')) {
+                        window.location.href = "{{ url_for('auction.boss') }}";
+                    }
                 }
-            }
-        });
+            });
 
-        // Mobile menu toggle
-        $('.mobile-menu-toggle').click(function() {
-            $('.nav-menu').toggleClass('show');
-        });
+            // Mobile menu toggle
+            $('.mobile-menu-toggle').click(function() {
+                $('.nav-menu').toggleClass('show');
+            });
 
-        // Close menu when clicking a link
-        $('.nav-menu a').click(function() {
-            $('.nav-menu').removeClass('show');
+            // Close menu when clicking a link
+            $('.nav-menu a').click(function() {
+                $('.nav-menu').removeClass('show');
+            });
         });
     </script>
     {% endblock %}
