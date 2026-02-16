@@ -19,7 +19,7 @@ def add_nomination_period_begun_notification(
 
     notification = Notification(
         title=(
-            f":incoming_envelope:  round {round_number} nominations are open!"
+            f":incoming_envelope:  Round {round_number} nominations are open!"
         ),
         message=(
             f"Get your round {round_number} nominations in by "
