@@ -16,16 +16,6 @@
         $(function () {
             $("select").select2();
 
-            // Boss button keyboard shortcut (B key)
-            $(document).keydown(function(e) {
-                if (e.key === 'b' || e.key === 'B') {
-                    // Check if we're not in an input/textarea
-                    if (!$(e.target).is('input, textarea, select')) {
-                        window.location.href = "{{ url_for('auction.boss') }}";
-                    }
-                }
-            });
-
             // Mobile menu toggle
             $('.mobile-menu-toggle').click(function() {
                 $('.nav-menu').toggleClass('show');
@@ -59,7 +49,7 @@
             {% if g.user %}
             <li><span>{{ g.user['username'] }}</span>
             <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
-            <li><a href="{{ url_for('auction.boss') }}" style="opacity: 0.3;" title="Boss button (or press 'B')">📊</a>
+            <li><a href="{{ url_for('auction.boss') }}" style="opacity: 0.3;" title="Boss button">📊</a>
                 {% else %}
             <li><a href="{{ url_for('auth.register') }}">Register</a>
             <li><a href="{{ url_for('auth.login') }}">Log In</a>

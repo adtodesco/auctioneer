@@ -32,7 +32,7 @@
             moment(nomination.Nomination.slot.closes_at).format('LLL') }} [Round {{ nomination.Nomination.slot.round }}]
         </p>
         {% if nomination.Nomination.player.matcher_id %}
-        <p class="match">Match rights: <strong>{{ nomination.Nomination.player.matcher_user.team_name }}</strong></p>
+        <p class="match">Match rights: <strong>{{ nomination.Nomination.player.matcher_user.team_name }}</strong>{% if nomination.Nomination.player.hometown_discount %} 🏠 <span style="color: #81c784;">(HTD eligible)</span>{% endif %}</p>
         {% endif %}
     </div>
 

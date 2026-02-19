@@ -291,7 +291,7 @@ def match(nomination_id):
 
             # Apply hometown discount if applicable
             if nomination.player.hometown_discount:
-                discounted_value = int(nomination.bids[0].value * 0.9)
+                discounted_value = math.ceil(nomination.bids[0].value * 0.9)
                 # Enforce minimum bid value
                 user_bid.value = max(discounted_value, get_minimum_bid_value())
             else:
@@ -328,7 +328,7 @@ def match(nomination_id):
     winning_bid = nomination.bids[0].value if nomination.bids else 0
     discounted_bid = None
     if nomination.player.hometown_discount and winning_bid:
-        discounted_value = int(winning_bid * 0.9)
+        discounted_value = math.ceil(winning_bid * 0.9)
         discounted_bid = max(discounted_value, get_minimum_bid_value())
 
     return render_template(
@@ -445,6 +445,11 @@ def sign(player_id):
     user_bid = get_user_bid_for_nomination(g.user.id, player.nomination[0].id)
     minimum_total_salary = get_contract_options_by_year(get_minimum_total_salary())
     last_year = list(minimum_total_salary)[0] - 1
+
+    # Apply hometown discount to minimum salary requirements if applicable
+    if player.hometown_discount:
+        minimum_total_salary = {year: round(salary * 0.9) for year, salary in minimum_total_salary.items()}
+
     options = dict()
     for year, salary in minimum_total_salary.items():
         if user_bid.value >= salary:
@@ -487,7 +492,7 @@ def sign(player_id):
             )
             return redirect(url_for("rosters.index"))
 
-    # Calculate reference table for minimum contracts
+    # Calculate reference table for minimum contracts (already has HTD applied if applicable)
     min_contracts = {}
     for year, min_salary in minimum_total_salary.items():
         min_contracts[year] = {
@@ -547,6 +552,11 @@ def admin_sign(player_id):
             # Calculate contract options based on bid value
             minimum_total_salary = get_contract_options_by_year(get_minimum_total_salary())
             last_year = list(minimum_total_salary)[0] - 1
+
+            # Apply hometown discount to minimum salary requirements if applicable
+            if player.hometown_discount:
+                minimum_total_salary = {year: round(salary * 0.9) for year, salary in minimum_total_salary.items()}
+
             options = dict()
             for year, salary in minimum_total_salary.items():
                 if user_bid.value >= salary:
@@ -581,6 +591,10 @@ def admin_sign(player_id):
     contract_options_by_user = {}
     minimum_total_salary = get_contract_options_by_year(get_minimum_total_salary())
     last_year = list(minimum_total_salary)[0] - 1
+
+    # Apply hometown discount to minimum salary requirements if applicable
+    if player.hometown_discount:
+        minimum_total_salary = {year: round(salary * 0.9) for year, salary in minimum_total_salary.items()}
 
     if player.nomination:
         for user in users:
