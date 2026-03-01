@@ -114,6 +114,7 @@ def users_from_file(file):
                     tiebreaker_order=int(team["tiebreaker_order"]),
                     slack_id=team["slack_id"],
                     is_league_manager=team["is_league_manager"] == "TRUE",
+                    fantrax_team_id=team.get("fantrax_team_id", ""),
                 )
             )
 

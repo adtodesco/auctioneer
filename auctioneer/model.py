@@ -13,6 +13,7 @@ class User(db.Model):
     slack_id = db.Column(db.String)
     discord_id = db.Column(db.String)
     is_league_manager = db.Column(db.Boolean, nullable=False, default=False)
+    fantrax_team_id = db.Column(db.String)
 
     # One-to-many relationships
     bids = db.relationship("Bid", back_populates="user")
@@ -37,6 +38,7 @@ class Player(db.Model):
     manager_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     matcher_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     hometown_discount = db.Column(db.Boolean, default=False, nullable=False)
+    fantrax_locked = db.Column(db.Boolean, default=False, nullable=False)
 
     # One-to-one relationships
     nomination = db.relationship("Nomination", back_populates="player")

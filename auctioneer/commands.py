@@ -8,7 +8,7 @@ from flask import current_app
 from . import db
 from .auction import close_nomination
 from .config import get_config
-from .model import Config, Nomination, Notification, Player, Slot
+from .model import Config, Nomination, Notification, Player, Slot, User
 from .slack import add_auction_won_notification
 from .slack import send_notification as send_slack_notification
 from .discord import send_notification as send_discord_notification
@@ -129,6 +129,12 @@ def init_db():
             description="Notification platform: 'slack' or 'discord'",
             value_type="string",
         ),
+        Config(
+            key="FANTRAX_LEAGUE_ID",
+            value="z03ha7kumhwsxnte",
+            description="Fantrax league ID for API integration",
+            value_type="string",
+        ),
     ]
     db.session.add_all(configs)
 
@@ -211,5 +217,54 @@ def send_notifications_command():
     click.echo(
         f"{datetime.utcnow().isoformat()}: Sent {len(notifications)} notifications via {notification_type}."
     )
+
+
+@click.command("sync-fantrax")
+@click.option("--cookie", required=True, help="Browser cookie string (JSESSIONID, FX_RM, cf_clearance, etc.)")
+def sync_fantrax_command(cookie):
+    """Lock all signed players to Fantrax (claim + set contract)."""
+    from .fantrax import lock_player
+
+    league_id = get_config("FANTRAX_LEAGUE_ID", "z03ha7kumhwsxnte")
+
+    # Find all signed but unlocked players
+    statement = (
+        db.select(Player)
+        .join(User, Player.manager_id == User.id)
+        .where(Player.manager_id.is_not(None))
+        .where(Player.salary.is_not(None))
+        .where(Player.contract.is_not(None))
+        .where(Player.fantrax_locked.is_(False))
+    )
+    players = db.session.execute(statement).scalars().all()
+
+    if not players:
+        click.echo("No unlocked players to sync.")
+        return
+
+    click.echo(f"Found {len(players)} player(s) to lock to Fantrax.")
+
+    locked = 0
+    failed = 0
+    for player in players:
+        team = db.session.get(User, player.manager_id)
+        if not team or not team.fantrax_team_id:
+            click.echo(f"  SKIP {player.name}: team has no fantrax_team_id")
+            failed += 1
+            continue
+
+        click.echo(f"  Locking {player.name} -> {team.short_team_name}...", nl=False)
+        success, message = lock_player(cookie, league_id, player, team)
+
+        if success:
+            player.fantrax_locked = True
+            db.session.commit()
+            click.echo(f" OK")
+            locked += 1
+        else:
+            click.echo(f" FAILED: {message}")
+            failed += 1
+
+    click.echo(f"\nDone. Locked: {locked}, Failed: {failed}")
 
 

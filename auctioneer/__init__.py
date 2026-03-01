@@ -91,10 +91,12 @@ def create_app(test_config=None):
         close_nominations_command,
         init_db_command,
         send_notifications_command,
+        sync_fantrax_command,
     )
 
     app.cli.add_command(init_db_command)
     app.cli.add_command(close_nominations_command)
     app.cli.add_command(send_notifications_command)
+    app.cli.add_command(sync_fantrax_command)
 
     return app

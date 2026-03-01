@@ -77,4 +77,68 @@
 
     <input type="submit" name="action" value="Save">
 </form>
+
+{% if g.user and g.user.is_league_manager and player.salary and player.contract %}
+<div style="margin-top: 1.5em;">
+    {% if player.fantrax_locked %}
+    <span style="color: #28a745; font-weight: bold;">&#x1f512; Locked to Fantrax</span>
+    {% else %}
+    <button id="lock-fantrax-btn" onclick="lockToFantrax({{ player.id }})" style="background: #007bff; color: white; border: none; padding: 0.5em 1em; border-radius: 4px; cursor: pointer;">
+        Lock to Fantrax
+    </button>
+    <span id="lock-fantrax-status" style="margin-left: 0.5em;"></span>
+    {% endif %}
+</div>
+
+<script>
+function getFantraxCookie() {
+    var cookie = sessionStorage.getItem('fantrax_cookie');
+    if (!cookie) {
+        cookie = prompt('Paste your Fantrax browser cookie string (JSESSIONID, FX_RM, cf_clearance, etc.):');
+        if (cookie) {
+            sessionStorage.setItem('fantrax_cookie', cookie);
+        }
+    }
+    return cookie;
+}
+
+function lockToFantrax(playerId) {
+    var cookie = getFantraxCookie();
+    if (!cookie) return;
+
+    var btn = document.getElementById('lock-fantrax-btn');
+    var status = document.getElementById('lock-fantrax-status');
+    btn.disabled = true;
+    btn.textContent = 'Locking...';
+    status.textContent = '';
+
+    fetch('/lock-fantrax/' + playerId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({cookies: cookie})
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+        if (data.success) {
+            btn.style.display = 'none';
+            status.innerHTML = '<span style="color: #28a745; font-weight: bold;">&#x1f512; Locked to Fantrax</span>';
+        } else {
+            btn.disabled = false;
+            btn.textContent = 'Lock to Fantrax';
+            status.style.color = 'red';
+            status.textContent = data.error || 'Lock failed';
+            if (data.error && data.error.toLowerCase().includes('http')) {
+                sessionStorage.removeItem('fantrax_cookie');
+            }
+        }
+    })
+    .catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = 'Lock to Fantrax';
+        status.style.color = 'red';
+        status.textContent = 'Request failed: ' + err;
+    });
+}
+</script>
+{% endif %}
 {% endblock %}

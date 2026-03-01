@@ -8,6 +8,7 @@ from flask import (
     current_app,
     flash,
     g,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -27,7 +28,7 @@ from .audit_log import (
     log_player_signed,
 )
 from .auth import admin_required, login_required
-from .config import get_match_time_hours, get_minimum_bid_value, get_minimum_total_salary, get_salary_cap
+from .config import get_config, get_match_time_hours, get_minimum_bid_value, get_minimum_total_salary, get_salary_cap
 from .constants import POSITIONS, TEAMS
 from .model import Bid, Nomination, Player, Slot, User
 from .notifications import (
@@ -734,6 +735,45 @@ def convert_slots_timezone(slots, from_tz, to_tz):
         )
 
     return slots
+
+
+@bp.route("/lock-fantrax/<int:player_id>", methods=["POST"])
+@login_required
+@admin_required
+def lock_fantrax(player_id):
+    """Lock a signed player to Fantrax (claim + set contract)."""
+    from .fantrax import lock_player
+
+    player = db.session.get(Player, player_id)
+    if player is None:
+        return jsonify({"success": False, "error": "Player not found."}), 404
+
+    if not player.manager_id:
+        return jsonify({"success": False, "error": "Player has no manager assigned."}), 400
+    if not player.salary:
+        return jsonify({"success": False, "error": "Player has no salary set."}), 400
+    if not player.contract:
+        return jsonify({"success": False, "error": "Player has no contract set."}), 400
+    if player.fantrax_locked:
+        return jsonify({"success": False, "error": "Player is already locked."}), 400
+
+    data = request.get_json()
+    if not data or not data.get("cookies"):
+        return jsonify({"success": False, "error": "Cookie string is required."}), 400
+
+    team = db.session.get(User, player.manager_id)
+    if not team or not team.fantrax_team_id:
+        return jsonify({"success": False, "error": "Team has no Fantrax team ID."}), 400
+
+    league_id = get_config("FANTRAX_LEAGUE_ID", "z03ha7kumhwsxnte")
+    success, message = lock_player(data["cookies"], league_id, player, team)
+
+    if success:
+        player.fantrax_locked = True
+        db.session.commit()
+        return jsonify({"success": True, "message": message})
+    else:
+        return jsonify({"success": False, "error": message}), 500
 
 
 @bp.route("/boss")
