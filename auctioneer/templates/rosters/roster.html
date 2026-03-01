@@ -24,11 +24,9 @@
 <div class="roster">
     <div class="players">
         {% if players %}
-        {% if g.user and g.user.is_league_manager %}
+        {% if g.user and (g.user.is_league_manager or (selected_user.id == g.user.id)) %}
         <div style="margin-bottom: 0.5em;">
-            <button id="lock-all-btn" onclick="lockAllToFantrax()" style="background: #007bff; color: white; border: none; padding: 0.4em 0.8em; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
-                Lock All to Fantrax
-            </button>
+            <a class="action" href="#" id="lock-all-btn" onclick="lockAllToFantrax(); return false;">Lock All to Fantrax</a>
             <span id="lock-all-status" style="margin-left: 0.5em; font-size: 0.9em;"></span>
         </div>
         {% endif %}
@@ -42,9 +40,6 @@
                     <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Salary</th>
                     <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Contract</th>
                     <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;"></th>
-                    {% if g.user and g.user.is_league_manager %}
-                    <th style="border: 1px solid #ddd; padding: 0.5em; position: sticky; top: 0; background: white;">Fantrax</th>
-                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -55,21 +50,16 @@
                     <td style="border: 1px solid #ddd; padding: 0.5em;">{{ player["position"] }}</td>
                     <td style="border: 1px solid #ddd; padding: 0.5em;">{% if player.salary %}${{ player["salary"] }}{% else %}--{% endif %}</td>
                     <td style="border: 1px solid #ddd; padding: 0.5em;">{% if player.contract %}{{ player["contract"] }}{% else %}--{% endif %}</td>
-                    <td style="border: 1px solid #ddd; padding: 0.5em;">{% if player.nomination and player.nomination[0].player.manager_user == g.user %}<a class="action"
-                            href="{{ url_for('auction.sign', player_id=player.id) }}">Sign</a>{% endif %}</td>
-                    {% if g.user and g.user.is_league_manager %}
-                    <td style="border: 1px solid #ddd; padding: 0.5em; text-align: center;" id="fantrax-cell-{{ player.id }}">
+                    <td style="border: 1px solid #ddd; padding: 0.5em;" id="action-cell-{{ player.id }}">
                         {% if player.fantrax_locked %}
-                        <span style="color: #28a745;" title="Locked to Fantrax">&#x1f512;</span>
-                        {% elif player.salary and player.contract %}
-                        <button class="lock-btn" data-player-id="{{ player.id }}" onclick="lockOneToFantrax({{ player.id }}, this)" style="background: #6c757d; color: white; border: none; padding: 0.2em 0.5em; border-radius: 3px; cursor: pointer; font-size: 0.8em;">
-                            Lock
-                        </button>
-                        {% else %}
-                        <span style="color: #999;">--</span>
+                        Signed
+                        {% elif player.nomination and player.nomination[0].player.manager_user == g.user %}
+                        <a class="action" href="{{ url_for('auction.sign', player_id=player.id) }}">Sign</a>
+                        {% endif %}
+                        {% if g.user and not player.fantrax_locked and player.salary and player.contract and (g.user.is_league_manager or (selected_user.id == g.user.id and player.manager_id == g.user.id)) %}
+                        <a class="action lock-btn" href="#" data-player-id="{{ player.id }}" onclick="lockOneToFantrax({{ player.id }}, this); return false;">Lock</a>
                         {% endif %}
                     </td>
-                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -108,116 +98,93 @@
     </div>
 </div>
 
-{% if g.user and g.user.is_league_manager %}
+{% if g.user and (g.user.is_league_manager or (selected_user.id == g.user.id)) %}
 <script>
-function getFantraxCookie() {
-    var cookie = sessionStorage.getItem('fantrax_cookie');
-    if (!cookie) {
-        cookie = prompt('Paste your Fantrax browser cookie string (JSESSIONID, FX_RM, cf_clearance, etc.):');
-        if (cookie) {
-            sessionStorage.setItem('fantrax_cookie', cookie);
-        }
-    }
-    return cookie;
-}
-
-function lockOneToFantrax(playerId, btn) {
-    var cookie = getFantraxCookie();
-    if (!cookie) return;
-
-    btn.disabled = true;
-    btn.textContent = '...';
+function lockOneToFantrax(playerId, link) {
+    link.textContent = '...';
+    link.onclick = function() { return false; };
 
     fetch('/lock-fantrax/' + playerId, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({cookies: cookie})
+        body: JSON.stringify({})
     })
     .then(function(resp) { return resp.json(); })
     .then(function(data) {
-        var cell = document.getElementById('fantrax-cell-' + playerId);
+        var cell = document.getElementById('action-cell-' + playerId);
         if (data.success) {
-            cell.innerHTML = '<span style="color: #28a745;" title="Locked to Fantrax">&#x1f512;</span>';
+            cell.innerHTML = 'Signed';
         } else {
-            btn.disabled = false;
-            btn.textContent = 'Lock';
-            btn.style.background = '#dc3545';
-            btn.title = data.error || 'Lock failed';
-            if (data.error && data.error.toLowerCase().includes('http')) {
-                sessionStorage.removeItem('fantrax_cookie');
-            }
+            link.textContent = 'Lock';
+            link.style.color = 'red';
+            link.title = data.error || 'Lock failed';
+            link.onclick = function() { lockOneToFantrax(playerId, link); return false; };
         }
     })
     .catch(function(err) {
-        btn.disabled = false;
-        btn.textContent = 'Lock';
-        btn.style.background = '#dc3545';
-        btn.title = 'Request failed: ' + err;
+        link.textContent = 'Lock';
+        link.style.color = 'red';
+        link.title = 'Request failed: ' + err;
+        link.onclick = function() { lockOneToFantrax(playerId, link); return false; };
     });
 }
 
 function lockAllToFantrax() {
-    var cookie = getFantraxCookie();
-    if (!cookie) return;
-
-    var buttons = document.querySelectorAll('.lock-btn');
-    if (buttons.length === 0) {
+    var links = document.querySelectorAll('.lock-btn');
+    if (links.length === 0) {
         document.getElementById('lock-all-status').textContent = 'No players to lock.';
         return;
     }
 
-    var lockAllBtn = document.getElementById('lock-all-btn');
+    var lockAllLink = document.getElementById('lock-all-btn');
     var lockAllStatus = document.getElementById('lock-all-status');
-    lockAllBtn.disabled = true;
+    lockAllLink.onclick = function() { return false; };
 
-    var total = buttons.length;
+    var total = links.length;
     var current = 0;
     var succeeded = 0;
     var failed = 0;
 
     function lockNext() {
         if (current >= total) {
-            lockAllBtn.disabled = false;
+            lockAllLink.onclick = function() { lockAllToFantrax(); return false; };
             lockAllStatus.textContent = 'Done. Locked: ' + succeeded + ', Failed: ' + failed;
             return;
         }
 
-        var btn = buttons[current];
-        var playerId = btn.getAttribute('data-player-id');
+        var link = links[current];
+        var playerId = link.getAttribute('data-player-id');
         current++;
         lockAllStatus.textContent = 'Locking ' + current + '/' + total + '...';
 
-        btn.disabled = true;
-        btn.textContent = '...';
+        link.textContent = '...';
+        link.onclick = function() { return false; };
 
         fetch('/lock-fantrax/' + playerId, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({cookies: cookie})
+            body: JSON.stringify({})
         })
         .then(function(resp) { return resp.json(); })
         .then(function(data) {
-            var cell = document.getElementById('fantrax-cell-' + playerId);
+            var cell = document.getElementById('action-cell-' + playerId);
             if (data.success) {
-                cell.innerHTML = '<span style="color: #28a745;" title="Locked to Fantrax">&#x1f512;</span>';
+                cell.innerHTML = 'Signed';
                 succeeded++;
             } else {
-                btn.disabled = false;
-                btn.textContent = 'Lock';
-                btn.style.background = '#dc3545';
-                btn.title = data.error || 'Lock failed';
+                link.textContent = 'Lock';
+                link.style.color = 'red';
+                link.title = data.error || 'Lock failed';
+                link.onclick = function() { lockOneToFantrax(playerId, link); return false; };
                 failed++;
-                if (data.error && data.error.toLowerCase().includes('http')) {
-                    sessionStorage.removeItem('fantrax_cookie');
-                }
             }
             lockNext();
         })
         .catch(function(err) {
-            btn.disabled = false;
-            btn.textContent = 'Lock';
-            btn.style.background = '#dc3545';
-            btn.title = 'Request failed: ' + err;
+            link.textContent = 'Lock';
+            link.style.color = 'red';
+            link.title = 'Request failed: ' + err;
+            link.onclick = function() { lockOneToFantrax(playerId, link); return false; };
             failed++;
             lockNext();
         });

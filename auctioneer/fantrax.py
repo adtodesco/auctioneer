@@ -1,4 +1,6 @@
+import json as json_module
 import logging
+import time
 from datetime import datetime
 
 import requests
@@ -53,15 +55,25 @@ def _fxpa_request(session, league_id, method, data):
         "v": "179.0.1",
     }
 
-    resp = session.post(url, json=payload, headers={"Content-Type": "text/plain"})
+    resp = session.post(
+        url,
+        data=json_module.dumps(payload),
+        headers={"Content-Type": "text/plain"},
+    )
     resp.raise_for_status()
     result = resp.json()
 
+    logger.info(f"fxpa {method} response: {json_module.dumps(result)[:1000]}")
+
     responses = result.get("responses", [])
     if not responses:
-        raise RuntimeError(f"No responses from Fantrax for method {method}")
+        raise RuntimeError(f"No responses from Fantrax for method {method}: {result}")
 
-    return responses[0].get("data", {})
+    resp_data = responses[0]
+    if resp_data.get("error"):
+        raise RuntimeError(f"Fantrax error for {method}: {resp_data['error']}")
+
+    return resp_data.get("data", {})
 
 
 def claim_player(session, league_id, player, team):
@@ -194,7 +206,14 @@ def lock_player(cookies_str, league_id, player, team):
 
     try:
         # Step 1: Claim the player (add to team with salary)
-        claim_player(session, league_id, player, team)
+        try:
+            claim_player(session, league_id, player, team)
+        except RuntimeError as e:
+            # If claim fails, player may already be on the team from a previous attempt
+            logger.warning(f"Claim step failed for {player.name}, continuing to set contract: {e}")
+
+        # Wait for Fantrax to process the claim before fetching roster
+        time.sleep(3)
 
         # Step 2: Get the full roster fieldMap
         roster_field_map = get_team_roster(session, league_id, team)
@@ -205,7 +224,10 @@ def lock_player(cookies_str, league_id, player, team):
         return True, f"Locked {player.name} to {team.short_team_name}"
 
     except requests.HTTPError as e:
-        msg = f"HTTP error locking {player.name}: {e}"
+        if e.response is not None and e.response.status_code in (401, 403):
+            msg = "Fantrax session has expired. Please contact the league manager to refresh credentials."
+        else:
+            msg = f"HTTP error locking {player.name}: {e}"
         logger.error(msg)
         return False, msg
     except RuntimeError as e:

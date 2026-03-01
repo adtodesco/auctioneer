@@ -739,7 +739,6 @@ def convert_slots_timezone(slots, from_tz, to_tz):
 
 @bp.route("/lock-fantrax/<int:player_id>", methods=["POST"])
 @login_required
-@admin_required
 def lock_fantrax(player_id):
     """Lock a signed player to Fantrax (claim + set contract)."""
     from .fantrax import lock_player
@@ -757,16 +756,20 @@ def lock_fantrax(player_id):
     if player.fantrax_locked:
         return jsonify({"success": False, "error": "Player is already locked."}), 400
 
-    data = request.get_json()
-    if not data or not data.get("cookies"):
-        return jsonify({"success": False, "error": "Cookie string is required."}), 400
+    # Allow admin or the player's owner
+    if not g.user.is_league_manager and player.manager_id != g.user.id:
+        return jsonify({"success": False, "error": "You can only lock your own players."}), 403
+
+    cookies_str = get_config("FANTRAX_COOKIES", "")
+    if not cookies_str:
+        return jsonify({"success": False, "error": "Fantrax is not configured. Please contact the league manager."}), 400
 
     team = db.session.get(User, player.manager_id)
     if not team or not team.fantrax_team_id:
         return jsonify({"success": False, "error": "Team has no Fantrax team ID."}), 400
 
     league_id = get_config("FANTRAX_LEAGUE_ID", "z03ha7kumhwsxnte")
-    success, message = lock_player(data["cookies"], league_id, player, team)
+    success, message = lock_player(cookies_str, league_id, player, team)
 
     if success:
         player.fantrax_locked = True

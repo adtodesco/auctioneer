@@ -135,6 +135,12 @@ def init_db():
             description="Fantrax league ID for API integration",
             value_type="string",
         ),
+        Config(
+            key="FANTRAX_COOKIES",
+            value="",
+            description="Fantrax browser cookies for API access (set by commissioner)",
+            value_type="string",
+        ),
     ]
     db.session.add_all(configs)
 
@@ -220,10 +226,16 @@ def send_notifications_command():
 
 
 @click.command("sync-fantrax")
-@click.option("--cookie", required=True, help="Browser cookie string (JSESSIONID, FX_RM, cf_clearance, etc.)")
+@click.option("--cookie", required=False, default=None, help="Browser cookie string (overrides stored config)")
 def sync_fantrax_command(cookie):
     """Lock all signed players to Fantrax (claim + set contract)."""
     from .fantrax import lock_player
+
+    if not cookie:
+        cookie = get_config("FANTRAX_COOKIES", "")
+    if not cookie:
+        click.echo("Error: No cookie provided and FANTRAX_COOKIES is not set in config.")
+        return
 
     league_id = get_config("FANTRAX_LEAGUE_ID", "z03ha7kumhwsxnte")
 
