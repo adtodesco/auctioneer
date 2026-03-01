@@ -9,7 +9,7 @@ from . import db
 from .auction import close_nomination
 from .config import get_config
 from .model import Config, Nomination, Notification, Player, Slot, User
-from .slack import add_auction_won_notification
+from .notifications import add_auction_won_notification
 from .slack import send_notification as send_slack_notification
 from .discord import send_notification as send_discord_notification
 from .utils import players_from_fantrax_export, users_from_file
