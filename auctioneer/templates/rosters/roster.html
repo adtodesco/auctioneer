@@ -56,7 +56,7 @@
                         {% elif player.nomination and player.nomination[0].player.manager_user == g.user %}
                         <a class="action" href="{{ url_for('auction.sign', player_id=player.id) }}">Sign</a>
                         {% endif %}
-                        {% if g.user and not player.fantrax_locked and player.salary and player.contract and (g.user.is_league_manager or (selected_user.id == g.user.id and player.manager_id == g.user.id)) %}
+                        {% if g.user and player.nomination and not player.fantrax_locked and player.salary and player.contract and (g.user.is_league_manager or (selected_user.id == g.user.id and player.manager_id == g.user.id)) %}
                         <a class="action lock-btn" href="#" data-player-id="{{ player.id }}" onclick="lockOneToFantrax({{ player.id }}, this); return false;">Lock</a>
                         {% endif %}
                     </td>
