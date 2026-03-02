@@ -39,6 +39,7 @@ def edit(player_id):
         matcher_id = request.form["matcher_id"] or None
         team = request.form["team"]
         hometown_discount = request.form.get("hometown_discount") == "on"
+        fantrax_locked = request.form.get("fantrax_locked") == "on"
 
         error = None
 
@@ -71,11 +72,15 @@ def edit(player_id):
             if player.hometown_discount != hometown_discount:
                 changes['hometown_discount'] = {'old': player.hometown_discount, 'new': hometown_discount}
 
+            if player.fantrax_locked != fantrax_locked:
+                changes['fantrax_locked'] = {'old': player.fantrax_locked, 'new': fantrax_locked}
+
             # Apply changes
             player.manager_id = manager_id
             player.matcher_id = matcher_id
             player.team = team
             player.hometown_discount = hometown_discount
+            player.fantrax_locked = fantrax_locked
 
             # Log audit event if there were changes
             if changes:

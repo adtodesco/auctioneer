@@ -116,6 +116,23 @@
         </div>
     </div>
 
+    <!-- Fantrax -->
+    <div class="form-section">
+        <h3>Fantrax</h3>
+        <p>Fantrax roster sync status</p>
+
+        <div class="form-row">
+            <label for="fantrax_locked">
+                <input type="checkbox" name="fantrax_locked" id="fantrax_locked"
+                       {% if player.fantrax_locked %}checked{% endif %}>
+                <strong>Locked to Fantrax</strong>
+            </label>
+            <small style="color: #666; display: block; margin-top: 0.3em;">
+                If checked, this player has been claimed and contracted on Fantrax
+            </small>
+        </div>
+    </div>
+
     <div class="submit-section">
         <input type="submit" value="Save Changes">
         <a href="{{ url_for('admin.players.index') }}" style="margin-left: 1em;">Cancel</a>

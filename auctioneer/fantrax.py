@@ -144,6 +144,8 @@ def get_team_roster(session, league_id, team):
         "adminMode": True,
     })
 
+    logger.info(f"getTeamRosterInfo response keys: {list(data.keys())}")
+
     field_map = data.get("fieldMap", {})
     if not field_map:
         raise RuntimeError(f"Empty fieldMap returned for team {team.short_team_name}")
@@ -192,7 +194,9 @@ def set_contract(session, league_id, player, team, roster_field_map):
 def lock_player(cookies_str, league_id, player, team):
     """High-level orchestrator: claim a player, set their contract on Fantrax.
 
-    Returns (success: bool, message: str).
+    Returns (success: bool, message: str, claimed: bool).
+    ``claimed`` is True when the player was added to the Fantrax roster,
+    even if the contract step subsequently fails.
     """
     session = requests.Session()
     cookies = parse_cookies(cookies_str)
@@ -204,13 +208,17 @@ def lock_player(cookies_str, league_id, player, team):
         "Referer": f"{FANTRAX_BASE_URL}/newui/fantasy/claimDrop.go?leagueId={league_id}&appType=0&appVersion=undefined",
     })
 
+    claimed = False
+
     try:
         # Step 1: Claim the player (add to team with salary)
         try:
             claim_player(session, league_id, player, team)
+            claimed = True
         except RuntimeError as e:
             # If claim fails, player may already be on the team from a previous attempt
             logger.warning(f"Claim step failed for {player.name}, continuing to set contract: {e}")
+            claimed = True
 
         # Wait for Fantrax to process the claim before fetching roster
         time.sleep(3)
@@ -221,7 +229,7 @@ def lock_player(cookies_str, league_id, player, team):
         # Step 3: Set the contract year
         set_contract(session, league_id, player, team, roster_field_map)
 
-        return True, f"Locked {player.name} to {team.short_team_name}"
+        return True, f"Locked {player.name} to {team.short_team_name}", claimed
 
     except requests.HTTPError as e:
         if e.response is not None and e.response.status_code in (401, 403):
@@ -229,12 +237,12 @@ def lock_player(cookies_str, league_id, player, team):
         else:
             msg = f"HTTP error locking {player.name}: {e}"
         logger.error(msg)
-        return False, msg
+        return False, msg, claimed
     except RuntimeError as e:
         msg = str(e)
         logger.error(msg)
-        return False, msg
+        return False, msg, claimed
     except Exception as e:
         msg = f"Unexpected error locking {player.name}: {e}"
         logger.error(msg)
-        return False, msg
+        return False, msg, claimed

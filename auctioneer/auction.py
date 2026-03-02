@@ -769,12 +769,16 @@ def lock_fantrax(player_id):
         return jsonify({"success": False, "error": "Team has no Fantrax team ID."}), 400
 
     league_id = get_config("FANTRAX_LEAGUE_ID", "z03ha7kumhwsxnte")
-    success, message = lock_player(cookies_str, league_id, player, team)
+    success, message, claimed = lock_player(cookies_str, league_id, player, team)
 
-    if success:
+    if claimed:
         player.fantrax_locked = True
         db.session.commit()
+
+    if success:
         return jsonify({"success": True, "message": message})
+    elif claimed:
+        return jsonify({"success": False, "error": f"Player claimed but contract failed: {message}", "partial": True}), 500
     else:
         return jsonify({"success": False, "error": message}), 500
 

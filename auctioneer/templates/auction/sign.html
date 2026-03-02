@@ -77,45 +77,4 @@
 
     <input type="submit" name="action" value="Save">
 </form>
-
-{% if g.user and player.salary and player.contract and not player.fantrax_locked and (g.user.is_league_manager or player.manager_id == g.user.id) %}
-<div style="margin-top: 1.5em;">
-    <a class="action" href="#" id="lock-fantrax-link" onclick="lockToFantrax({{ player.id }}); return false;">Lock to Fantrax</a>
-    <span id="lock-fantrax-status" style="margin-left: 0.5em;"></span>
-</div>
-
-<script>
-function lockToFantrax(playerId) {
-    var link = document.getElementById('lock-fantrax-link');
-    var status = document.getElementById('lock-fantrax-status');
-    link.textContent = 'Locking...';
-    link.onclick = function() { return false; };
-    status.textContent = '';
-
-    fetch('/lock-fantrax/' + playerId, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({})
-    })
-    .then(function(resp) { return resp.json(); })
-    .then(function(data) {
-        if (data.success) {
-            link.style.display = 'none';
-            status.textContent = 'Signed';
-        } else {
-            link.textContent = 'Lock to Fantrax';
-            link.onclick = function() { lockToFantrax(playerId); return false; };
-            status.style.color = 'red';
-            status.textContent = data.error || 'Lock failed';
-        }
-    })
-    .catch(function(err) {
-        link.textContent = 'Lock to Fantrax';
-        link.onclick = function() { lockToFantrax(playerId); return false; };
-        status.style.color = 'red';
-        status.textContent = 'Request failed: ' + err;
-    });
-}
-</script>
-{% endif %}
 {% endblock %}
